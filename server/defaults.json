@@ -1,0 +1,227 @@
+{
+  "letterhead": {
+    "l1": "Regional Government",
+    "l2": "COSTA VERDE AUTONOMOUS REGION",
+    "l3": "MINISTRY OF FINANCE AND BUDGET",
+    "l4": "REGIONAL TREASURY OFFICE"
+  },
+  "cert_text": {
+    "body": "This is to certify that the following amount of regional collections were verified to have been credited to the account of the Regional Treasury Office maintained with COSTA VERDE DEVELOPMENT BANK.",
+    "purpose": "Confirmation of Deposited Collections"
+  },
+  "signatories": [
+    {
+      "ord": 1,
+      "role_label": "Prepared by",
+      "name": "SORAYA L. GARCIA",
+      "position": "Treasury Operations Officer I"
+    },
+    {
+      "ord": 2,
+      "role_label": "Certified Correct",
+      "name": "LEILA P. ROSARIO",
+      "position": "Chief Treasury Operations Officer I"
+    },
+    {
+      "ord": 3,
+      "role_label": "Approved by",
+      "name": "JAMIL S. MABINI",
+      "position": "Regional Treasurer"
+    }
+  ],
+  "cert_class_map": {
+    "Contractor's Tax": "Contractor's Tax (100)",
+    "Fees and Charges": "Fees and Charges (200)",
+    "Rental Fees": "Fees and Charges (200)",
+    "Natural Wealth Tax": "Natural Wealth Tax (400)",
+    "Trust Receipts": "Trust Receipts (500)",
+    "Other Revenues": "Other Revenue (300)",
+    "Interest Income": "Other Revenue (300)",
+    "Unidentified": "Other Revenue (300)",
+    "Sale of OR": "Other Revenue (300)",
+    "Receipts from Unutilized Bid Docs Sales": "Other Revenue (300)",
+    "Hospital Income": "Other Revenue (300)",
+    "Sale/Installment Payments of Housing Units (MHS Specific)": "Other Revenue (300)",
+    "CASA (CASA Specific)": "Other Revenue (300)"
+  },
+  "rev_schemes": {
+    "standard": {
+      "classes": [
+        "Contractor's Tax (100)",
+        "Fees and Charges (200)",
+        "Other Revenue (300)",
+        "Natural Wealth Tax (400)",
+        "Trust Receipts (500)"
+      ],
+      "catchAll": "Other Revenue (300)"
+    },
+    "airport": {
+      "classes": [
+        "Travel Tax",
+        "Parking Fee",
+        "Concessionaire Fee",
+        "DPSC"
+      ],
+      "catchAll": "DPSC",
+      "map": {
+        "Travel Tax": "Travel Tax",
+        "Parking Fee": "Parking Fee",
+        "Concessionaire Fee": "Concessionaire Fee",
+        "DPSC": "DPSC"
+      }
+    },
+    "agencyScheme": {
+      "RAA": "airport"
+    }
+  },
+  "extra_collection_types": [
+    "Hospital Income",
+    "Sale/Installment Payments of Housing Units (MHS Specific)",
+    "CASA (CASA Specific)"
+  ],
+  "agency_heads": {
+    "MOAF": {
+      "name": "YASMIN M. GALVEZ",
+      "title": "Minister",
+      "agency_name": "Ministry of Agriculture and Fisheries - CVAR"
+    },
+    "MENR": {
+      "name": "IDRIS G. PASCUAL",
+      "title": "Minister",
+      "agency_name": "Ministry of Environment and Natural Resources - CVAR"
+    },
+    "MOTC": {
+      "name": "KHALID L. GARCIA",
+      "title": "Minister",
+      "agency_name": "Ministry of Transportation and Communications - CVAR"
+    },
+    "RAA": {
+      "name": "ALEEYA L. SANTOS",
+      "title": "Director I",
+      "agency_name": "Regional Airports Authority"
+    },
+    "RTFRB": {
+      "name": "ZUBAIR D. CRUZ",
+      "title": "Director I",
+      "agency_name": "Regional Transport Franchising and Regulatory Board - CVAR"
+    },
+    "RLTO": {
+      "name": "HASSAN K. DIZON",
+      "title": "Director I",
+      "agency_name": "Regional Land Transportation Office - CVAR"
+    },
+    "RMA": {
+      "name": "RASHID D. PALOMARES",
+      "title": "Director I",
+      "agency_name": "Regional Maritime Authority - CVAR"
+    },
+    "RPMA": {
+      "name": "HAKIM L. SALVADOR",
+      "title": "Director I",
+      "agency_name": "Regional Ports Management Authority - CVAR"
+    },
+    "RCC": {
+      "name": "HARUN H. PALOMARES",
+      "title": "Commissioner",
+      "agency_name": "Regional Communications Commission - CVAR"
+    },
+    "RAB": {
+      "name": "INDIRA T. NAVARRO",
+      "title": "Director I",
+      "agency_name": "Regional Aeronautics Board - CVAR"
+    },
+    "MOED": {
+      "name": "YASMIN K. TORRES",
+      "title": "Concurrent Minister",
+      "agency_name": "Ministry of Education - CVAR"
+    },
+    "TVTA": {
+      "name": "JOHARA R. GALVEZ",
+      "title": "Director General",
+      "agency_name": "Technical and Vocational Training Authority - CVAR"
+    },
+    "MILG": {
+      "name": "DAYANG L. ALVARO",
+      "title": "Minister",
+      "agency_name": "Ministry of Interior and Local Government - CVAR"
+    },
+    "MTT": {
+      "name": "AIDA D. PADILLA",
+      "title": "Minister",
+      "agency_name": "Ministry of Trade and Tourism - CVAR"
+    },
+    "CVFZ": {
+      "name": "ZUBAIR P. DOMINGO",
+      "title": "Director 1 (Port Administrator)",
+      "agency_name": "Costa Verde Freeport Zone - CVAR"
+    },
+    "MHS": {
+      "name": "NURHANA C. RAMOS",
+      "title": "Minister",
+      "agency_name": "Ministry of Housing and Settlements - CVAR"
+    },
+    "OGV": {
+      "name": "YASMIN K. TORRES",
+      "title": "Regional Governor",
+      "agency_name": "Office of the Regional Governor - CVAR"
+    },
+    "RCA": {
+      "name": "HAKIM D. OCAMPO",
+      "title": "Executive Director",
+      "agency_name": "Regional Cooperatives Authority - CVAR"
+    },
+    "MOH": {
+      "name": "LAILA C. ROSARIO",
+      "title": "Minister",
+      "agency_name": "Ministry of Health - CVAR"
+    },
+    "MOLE": {
+      "name": "HANAN N. ROSARIO",
+      "title": "Minister",
+      "agency_name": "Ministry of Labor and Employment - CVAR"
+    },
+    "MPW": {
+      "name": "YUSUF L. REYES",
+      "title": "Minister",
+      "agency_name": "Ministry of Public Works - CVAR"
+    },
+    "MSWD": {
+      "name": "RAHMA D. MENDOZA",
+      "title": "Minister",
+      "agency_name": "Ministry of Social Welfare and Development - CVAR"
+    },
+    "RPDA": {
+      "name": "SAID Z. CRUZ",
+      "title": "Director General",
+      "agency_name": "Regional Planning and Development Authority - CVAR"
+    },
+    "MPOS": {
+      "name": "INDIRA U. ALONZO",
+      "title": "Minister",
+      "agency_name": "Ministry of Public Order and Safety - CVAR"
+    },
+    "RHRC": {
+      "name": "NASSER K. LACSON",
+      "title": "Chairperson",
+      "agency_name": "Regional Human Rights Commission - CVAR"
+    },
+    "MOST": {
+      "name": "HAKIM L. ABDULLAH",
+      "title": "Minister",
+      "agency_name": "Ministry of Science and Technology - CVAR"
+    }
+  },
+  "cert_groups": {
+    "MOED (Consolidated)": {
+      "ministry": "MOED",
+      "org_code": "MOED2022",
+      "head_office": "MOED",
+      "members": [
+        "MOED",
+        "MOED BE",
+        "MOED HE",
+        "MOED MA"
+      ]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# Generated database (rebuild with import_data.py)
+collection.db
+collection.db-wal
+collection.db-shm
+backups/
+exports/
+imported_from_xlsx.json
+.secret_key
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec

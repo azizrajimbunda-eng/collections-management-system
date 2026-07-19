@@ -1,0 +1,6 @@
+# Phase 2 backend dependencies — pinned to the tested versions for reproducible installs.
+# The database builder + password tools use only the Python standard library.
+# To update deliberately: bump a version here, reinstall, re-test, then redeploy.
+Flask==3.1.2
+Werkzeug==3.1.3    # Flask's WSGI/security dependency — pinned explicitly so it can't float
+openpyxl==3.1.5    # Excel import (import_xlsx.py) and export (export_xlsx.py / in-app download)
