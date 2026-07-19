@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Collection Database</title>
+<style>
+:root{
+  --bg:#0f1729;--panel:#16213a;--panel2:#1d2b4a;--line:#2a3a5e;--txt:#e7edf7;
+  --muted:#93a4c4;--accent:#3b82f6;--accent2:#22c55e;--warn:#f59e0b;--red:#ef4444;
+  --chip:#243456;--shadow:0 4px 18px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);color:var(--txt);font-size:14px}
+header{background:linear-gradient(90deg,#0c1426,#152244);padding:14px 22px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50}
+header h1{font-size:17px;margin:0;font-weight:650;letter-spacing:.2px}
+header .sub{color:var(--muted);font-size:12px}
+nav{display:flex;gap:4px;flex-wrap:wrap;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);
+  position:sticky;top:51px;z-index:40}
+nav button{background:transparent;border:1px solid transparent;color:var(--muted);padding:8px 16px;border-radius:8px;
+  cursor:pointer;font-size:13px;font-weight:600}
+nav button:hover{background:var(--panel2);color:var(--txt)}
+nav button.active{background:var(--accent);color:#fff}
+main{padding:22px;max-width:1280px;margin:0 auto}
+.tab{display:none}.tab.active{display:block}
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
+.kpi .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+.kpi .val{font-size:24px;font-weight:700;margin-top:6px}
+.kpi .val.sm{font-size:20px}
+.kpi .delta{font-size:12px;margin-top:4px;color:var(--muted)}
+h2{font-size:15px;margin:0 0 14px;font-weight:650}
+h3{font-size:13px;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.5px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600}
+input,select,textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+  padding:9px 11px;border-radius:8px;font-size:13px;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.btn{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;
+  font-size:13px;font-weight:650}
+.btn:hover{filter:brightness(1.1)}
+.btn.green{background:var(--accent2)}.btn.gray{background:var(--chip);color:var(--txt)}
+.btn.red{background:var(--red)}.btn.sm{padding:6px 12px;font-size:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.4px;
+  position:sticky;top:0;background:var(--panel);cursor:pointer;user-select:none}
+tbody tr:hover{background:var(--panel2)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.tablewrap{overflow:auto;max-height:560px;border-radius:10px;border:1px solid var(--line)}
+.chip{display:inline-block;background:var(--chip);padding:3px 9px;border-radius:20px;font-size:11px}
+.bar-track{background:var(--panel2);border-radius:6px;height:9px;overflow:hidden;min-width:80px}
+.bar-fill{height:100%;border-radius:6px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--accent2);color:#fff;padding:13px 20px;border-radius:10px;
+  box-shadow:var(--shadow);opacity:0;transform:translateY(10px);transition:.25s;z-index:100;font-weight:600}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.err{background:var(--red)}
+.muted{color:var(--muted)}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:90}
+.modal-bg.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px;width:560px;max-width:92vw;
+  max-height:88vh;overflow:auto;box-shadow:var(--shadow)}
+.section-bars{display:flex;flex-direction:column;gap:9px}
+.sbrow{display:grid;grid-template-columns:140px 1fr 110px;gap:10px;align-items:center;font-size:12.5px}
+.svgwrap{width:100%;overflow:auto}
+.pill{padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600}
+.pill.ok{background:rgba(34,197,94,.18);color:#4ade80}
+.pill.mid{background:rgba(245,158,11,.18);color:#fbbf24}
+.pill.low{background:rgba(239,68,68,.18);color:#f87171}
+.split{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
+@media(max-width:900px){.formgrid{grid-template-columns:1fr 1fr}.split{grid-template-columns:1fr}}
+@media(max-width:640px){.formgrid{grid-template-columns:1fr}}
+.tag-actual{color:#4ade80}.tag-target{color:#fbbf24}
+small.hint{color:var(--muted);font-size:11px;font-weight:400}
+/* report paper */
+.report-paper{background:#fff;color:#111;padding:34px 40px;border-radius:8px}
+.report-paper *{color:#111}
+.rpt-head{text-align:center;line-height:1.45;margin-bottom:6px}
+.rpt-head .r1{font-size:12px}
+.rpt-head .r2{font-size:13px;font-weight:600}
+.rpt-head .r3{font-size:12px}
+.rpt-title{text-align:center;font-weight:700;font-size:15px;margin:14px 0 2px;text-transform:uppercase}
+.rpt-sub{text-align:center;font-size:12px;margin-bottom:14px}
+.report-paper table{font-size:11px;width:100%;border-collapse:collapse}
+.report-paper th,.report-paper td{border:1px solid #888;padding:4px 6px;white-space:nowrap;background:#fff}
+.report-paper th{background:#e8edf5;color:#111;text-transform:none;font-size:10.5px;position:static;text-align:center}
+.report-paper td.num{text-align:right;font-variant-numeric:tabular-nums}
+.report-paper tr.grp td{background:#f1f4f9;font-weight:700}
+.report-paper tr.tot td{background:#dfe7f3;font-weight:700}
+.report-paper .lname{text-align:left;white-space:normal;min-width:200px}
+.report-paper td.subrow{padding-left:24px;color:#333}
+.report-paper .cert-sigs{display:flex;gap:22px;margin-top:34px;flex-wrap:wrap}
+.report-paper .cert-sig{flex:1;min-width:170px;font-size:11px}
+.report-paper .cert-sig .role{margin-bottom:38px}
+.report-paper .cert-sig .nm{font-weight:700;border-top:1px solid #111;padding-top:3px;text-transform:uppercase}
+.report-paper .cert-sig .ps{font-size:10px}
+.rpt-banner{position:relative;text-align:center;padding:4px 104px 4px}
+.rpt-banner .emblem{height:30px;margin:0 auto 2px;display:block}
+.rpt-banner .seal-l,.rpt-banner .seal-r{position:absolute;top:2px;height:84px}
+.rpt-banner .seal-l{left:6px}.rpt-banner .seal-r{right:6px}
+.rpt-banner .rpt-cno{position:absolute;right:108px;top:4px;font-size:11px;text-align:right;line-height:1.4}
+@media screen{.report-paper tbody tr:nth-child(even):not(.grp):not(.tot) td{background:#f7f9fc}}
+.rpt-foot{margin-top:22px;font-size:11px;display:flex;justify-content:space-between}
+.rpt-foot .sig{margin-top:34px;border-top:1px solid #111;padding-top:3px;width:200px;text-align:center}
+@media print{
+  body{background:#fff}
+  header,nav,.no-print,.toast{display:none !important}
+  main{padding:0;max-width:none}
+  .tab{display:none !important}
+  #tab-reports.active{display:block !important}
+  .report-paper{box-shadow:none;border:none;border-radius:0;padding:10px;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .report-paper thead{display:table-header-group}
+  .report-paper tr,.report-paper .rpt-foot,.report-paper .cert-sigs,.report-paper .cert-sig{break-inside:avoid;page-break-inside:avoid}
+  @page{size:landscape;margin:12mm}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Collection Database</h1>
+  <span class="sub" id="hdrsub"></span>
+  <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+    <label style="margin:0">Year</label>
+    <select id="globalYear" style="width:auto;padding:6px 10px"></select>
+  </span>
+</header>
+<nav>
+  <button data-tab="dash" class="active">Dashboard</button>
+  <button data-tab="entry">Data Entry</button>
+  <button data-tab="records">Records &amp; Reports</button>
+  <button data-tab="ministry">Targets vs Collections</button>
+  <button data-tab="reports">Print Reports</button>
+  <button data-tab="history">Report History</button>
+  <button data-tab="audit">Audit Log</button>
+  <button data-tab="settings">Data &amp; Settings</button>
+</nav>
+<main>
+
+<!-- ================= DASHBOARD ================= -->
+<section class="tab active" id="tab-dash">
+  <div class="grid kpis" id="kpiRow"></div>
+  <div style="height:16px"></div>
+  <div class="split">
+    <div class="card">
+      <h2 id="dashChartTitle">Monthly Collections</h2>
+      <div class="svgwrap" id="monthlyChart"></div>
+    </div>
+    <div class="card">
+      <h2>By Collection Type</h2>
+      <div class="section-bars" id="typeBars"></div>
+    </div>
+  </div>
+  <div style="height:16px"></div>
+  <div class="split">
+    <div class="card">
+      <h2>By Payment Method</h2>
+      <div class="section-bars" id="payBars"></div>
+    </div>
+    <div class="card">
+      <h2>Top Offices</h2>
+      <div class="section-bars" id="officeBars"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DATA ENTRY ================= -->
+<section class="tab" id="tab-entry">
+  <div class="card">
+    <h2 id="entryTitle">New Collection Entry</h2>
+    <form id="entryForm">
+      <input type="hidden" id="f_id">
+      <div class="formgrid">
+        <div>
+          <label>Organizational Code <small class="hint">(auto-fills below)</small></label>
+          <select id="f_org_code" required></select>
+        </div>
+        <div><label>Ministry</label><input id="f_ministry" readonly></div>
+        <div><label>Office / MOA</label><input id="f_office" readonly></div>
+        <div><label>Clearing Account</label><input id="f_clearing" readonly></div>
+        <div><label>Payment Method</label><select id="f_payment_method" required></select></div>
+        <div><label>Bank Branch</label><select id="f_lbp_branch"></select></div>
+        <div><label>Amount (PHP)</label><input id="f_amount" type="number" step="0.01" min="0" required></div>
+        <div><label>Transaction Date</label><input id="f_date" type="date" required></div>
+        <div><label>Type of Collection</label><select id="f_type" required></select></div>
+        <div><label>Tagging</label><select id="f_tagging"><option>Actual</option><option>Target</option></select></div>
+        <div style="grid-column:span 2"><label>Remarks</label><input id="f_remarks" placeholder="Optional"></div>
+      </div>
+      <div style="margin-top:16px" class="row">
+        <button type="submit" class="btn green" id="saveBtn">Add Entry</button>
+        <button type="button" class="btn gray" id="cancelEdit" style="display:none">Cancel Edit</button>
+        <span class="muted" id="entryMsg"></span>
+      </div>
+    </form>
+  </div>
+  <div style="height:16px"></div>
+  <div class="card">
+    <h2>Recent Entries</h2>
+    <div class="tablewrap"><table id="recentTbl"><thead></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ================= RECORDS ================= -->
+<section class="tab" id="tab-records">
+  <div class="card">
+    <h2>Records &amp; Reports</h2>
+    <div class="filters">
+      <div><label>Search</label><input id="flt_search" placeholder="any text..."></div>
+      <div><label>Ministry</label><select id="flt_ministry"></select></div>
+      <div><label>Office</label><select id="flt_office"></select></div>
+      <div><label>Month</label><select id="flt_month"></select></div>
+      <div><label>Type</label><select id="flt_type"></select></div>
+      <div><label>Tagging</label><select id="flt_tagging"></select></div>
+      <div><label>From</label><input id="flt_from" type="date"></div>
+      <div><label>To</label><input id="flt_to" type="date"></div>
+    </div>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn gray sm" id="clearFlt">Clear filters</button>
+      <button class="btn sm" id="exportCsv">Export CSV</button>
+      <span class="muted" id="recStats" style="margin-left:auto"></span>
+    </div>
+    <div class="tablewrap"><table id="recTbl"><thead></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ================= MINISTRY ================= -->
+<section class="tab" id="tab-ministry">
+  <div class="card">
+    <h2 id="minTitle">Targets vs Collections (by Ministry)</h2>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn sm" id="exportMinCsv">Export CSV</button>
+    </div>
+    <div class="tablewrap"><table id="minTbl"><thead></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ================= PRINT REPORTS ================= -->
+<section class="tab" id="tab-reports">
+  <div class="card no-print">
+    <h2>Print Reports</h2>
+    <div class="filters">
+      <div><label>Report</label>
+        <select id="rpt_type">
+          <option value="summary">Summary of Collection (Ministry x Month)</option>
+          <option value="bytype">Collection Report by Type (CR-MO-TAX)</option>
+          <option value="ledger">Ledger / Detail Listing</option>
+          <option value="cert">Certification (per Agency)</option>
+        </select>
+      </div>
+      <div><label>As of date</label><input id="rpt_asof" type="date"></div>
+      <div id="rpt_grp_wrap"><label>Group by</label><select id="rpt_groupby"><option value="ministry">Ministry</option><option value="office">Office / Agency</option></select></div>
+      <div id="rpt_detail_wrap"><label>Detail level</label><select id="rpt_detail"><option value="consolidated">Consolidated</option><option value="drill">Drill-down (Ministry &rarr; Office)</option></select></div>
+      <div id="rpt_empty_wrap" style="display:none"><label>Empty offices</label><label style="font-weight:400;color:var(--txt);display:flex;align-items:center;gap:6px"><input type="checkbox" id="rpt_empty" style="width:auto;margin:0">Show offices with no collections</label></div>
+      <div id="rpt_min_c_wrap" style="display:none"><label>Ministry</label><select id="cert_ministry"></select></div>
+      <div id="rpt_agency_wrap" style="display:none"><label>Agency / Sub-Office</label><select id="cert_agency"></select></div>
+      <div id="rpt_cmon_wrap" style="display:none"><label>Month</label><select id="cert_month"></select></div>
+      <div id="rpt_min_wrap"><label>Ministry (ledger)</label><select id="rpt_ministry"></select></div>
+      <div id="rpt_off_wrap"><label>Office (ledger)</label><select id="rpt_office"></select></div>
+      <div id="rpt_mon_wrap"><label>Month (ledger)</label><select id="rpt_month"></select></div>
+      <div id="rpt_typ_wrap"><label>Type (ledger)</label><select id="rpt_type_filter"></select></div>
+    </div>
+    <div class="row">
+      <button class="btn" id="rpt_print">Print / Save as PDF</button>
+      <button class="btn green" id="rpt_issue">Issue &amp; Log</button>
+      <button class="btn gray" id="rpt_csv">Export CSV</button>
+      <span class="muted">Tip: in the print dialog choose "Save as PDF" to keep a copy.</span>
+    </div>
+  </div>
+  <div style="height:16px"></div>
+  <div class="card report-paper" id="rpt_out"></div>
+</section>
+
+<!-- ================= HISTORY ================= -->
+<section class="tab" id="tab-history">
+  <div class="card">
+    <h2>Report History <small class="hint">(issued reports &amp; certifications — figures locked as issued)</small></h2>
+    <div class="row" style="margin-bottom:12px"><span class="muted" id="histStats"></span></div>
+    <div class="tablewrap"><table id="histTbl"><thead></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ================= AUDIT ================= -->
+<section class="tab" id="tab-audit">
+  <div class="card">
+    <h2>Audit Log <small class="hint">(changes made in this app)</small></h2>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn gray sm" id="clearAudit">Clear log</button>
+      <span class="muted" id="auditStats"></span>
+    </div>
+    <div class="tablewrap"><table id="auditTbl"><thead></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ================= SETTINGS ================= -->
+<section class="tab" id="tab-settings">
+  <div class="split">
+    <div class="card">
+      <h2>Backup &amp; Transfer</h2>
+      <p class="muted">Your data is stored in this browser. Export a backup file to keep it safe or move it to another computer / user.</p>
+      <div class="row">
+        <button class="btn" id="exportJson">Export full backup (JSON)</button>
+        <button class="btn gray" id="importJsonBtn">Import backup</button>
+        <input type="file" id="importJson" accept=".json" style="display:none">
+      </div>
+      <div style="height:14px"></div>
+      <button class="btn red sm" id="resetSeed">Reset to original migrated data</button>
+    </div>
+    <div class="card">
+      <h2>Manage Lists</h2>
+      <h3>Add Organizational Code</h3>
+      <div class="formgrid" style="grid-template-columns:1fr 1fr">
+        <div><label>Org Code</label><input id="nc_code"></div>
+        <div><label>Clearing Acct</label><input id="nc_clearing"></div>
+        <div><label>Ministry</label><input id="nc_ministry"></div>
+        <div><label>Office/MOA</label><input id="nc_office"></div>
+      </div>
+      <div style="margin-top:10px"><button class="btn green sm" id="addOrg">Add Org Code</button></div>
+      <div style="height:16px"></div>
+      <h3>Add Collection Type</h3>
+      <div class="row"><input id="nc_type" placeholder="New type" style="max-width:200px"><select id="nc_type_class" style="max-width:200px"></select><button class="btn green sm" id="addType">Add</button></div>
+      <small class="hint">Pick which certification column this type belongs to.</small>
+      <div style="height:16px"></div>
+      <h3>Set Ministry Target</h3>
+      <div class="row">
+        <select id="nc_tmin" style="max-width:160px"></select>
+        <input id="nc_tyear" type="number" placeholder="Year" style="max-width:90px">
+        <input id="nc_tval" type="number" placeholder="Target amount" style="max-width:180px">
+        <button class="btn green sm" id="setTarget">Save</button>
+      </div>
+    </div>
+  </div>
+  <div style="height:16px"></div>
+  <div class="card">
+    <h2>Report Signatories &amp; Identity</h2>
+    <p class="muted">These names appear on report footers and certifications. Stored in this browser only.</p>
+    <div class="row" style="margin-bottom:12px"><button class="btn gray sm" id="changeName">Change my name</button></div>
+    <div id="sigEditor"></div>
+    <button class="btn green sm" id="addSig">Add signatory</button>
+  </div>
+  <div style="height:16px"></div>
+  <div class="card">
+    <h2>Certification Revenue-Class Mapping</h2>
+    <p class="muted">Which certification column each collection type falls under (standard 5-column scheme). The airport scheme (RAA) keeps its own Travel Tax / Parking / Concessionaire / DPSC columns.</p>
+    <div class="tablewrap" style="max-height:360px"><div id="classMapEditor"></div></div>
+  </div>
+  <div style="height:16px"></div>
+  <div class="card">
+    <h2>Agency Heads</h2>
+    <p class="muted">The head (name, title, official agency name) printed on each agency's certification. Each ministry / agency is stored separately.</p>
+    <div class="tablewrap" style="max-height:420px;padding:10px"><div id="headEditor"></div></div>
+  </div>
+  <div style="height:16px"></div>
+  <div class="card">
+    <h2>Letterhead</h2>
+    <p class="muted">Printed at the top of Summary / By-Type / Ledger reports. Logo is optional (small PNG recommended).</p>
+    <div class="formgrid" style="grid-template-columns:1fr 1fr">
+      <div><label>Line 1</label><input id="lh_l1"></div>
+      <div><label>Line 2</label><input id="lh_l2"></div>
+      <div><label>Line 3</label><input id="lh_l3"></div>
+      <div><label>Line 4</label><input id="lh_l4"></div>
+    </div>
+    <p class="muted" style="margin-top:8px">The seals shown are fictional placeholders and appear automatically on every report and certification &mdash; matching the certification template.</p>
+  </div>
+</section>
+
+</main>
+<div class="toast" id="toast"></div>
+<div class="modal-bg" id="modalBg"><div class="modal" id="modalBody"></div></div>
+
+<script>
+/* ===== SEED DATA (migrated from spreadsheet) ===== */
+const SEED = __SEED__;
+const MINNAMES = __MINNAMES__;
+const APP_USER = "__USER__";
+const LOGO_MINISTRY = "__LOGO_MINISTRY__";
+const LOGO_OFFICE = "__LOGO_OFFICE__";
+const LOGO_EMBLEM = "__LOGO_EMBLEM__";
+const LSKEY = "collectionDB_v1";
+const SCHEMA_VERSION = 4;
+
+/* ===== STATE ===== */
+let DB = load();
+let YEAR = defaultYear();          // active fiscal-year filter ("" = All Years)
+function load(){
+  try{const s=localStorage.getItem(LSKEY);if(s)return migrateDB(JSON.parse(s));}catch(e){}
+  return seedClone();
+}
+function seedClone(){
+  const d=JSON.parse(JSON.stringify(SEED));
+  d.transactions.forEach((t,i)=>{if(!t.id)t.id="seed-"+i;});
+  d.audit=[];
+  return migrateDB(d);
+}
+function save(){
+  try{localStorage.setItem(LSKEY,JSON.stringify(DB));}
+  catch(e){toast("Storage full — export a backup and prune issued reports",true);}
+}
+
+/* ===== SCHEMA / MIGRATION ===== */
+function defaultSettings(){
+  return {
+    currentUser:{name:"",initials:""},
+    // Treasury signatory roster (defaults seeded from the certification template — all editable).
+    signatories:[
+      {role_label:"Prepared by",name:"SORAYA L. GARCIA",position:"Treasury Operations Officer I"},
+      {role_label:"Certified Correct",name:"LEILA P. ROSARIO",position:"Chief Treasury Operations Officer I"},
+      {role_label:"Approved by",name:"JAMIL S. MABINI",position:"Regional Treasurer"}
+    ],
+    // Agency head per office -> {name, title, agencyName}. Seeded from the template; editable.
+    // Current officials from the May-2026 certification template — editable in Settings.
+    agencyHeads:{
+      "MOAF":{name:"YASMIN M. GALVEZ",title:"Minister",agencyName:"Ministry of Agriculture and Fisheries - CVAR"},
+      "MENR":{name:"IDRIS G. PASCUAL",title:"Minister",agencyName:"Ministry of Environment and Natural Resources - CVAR"},
+      "MOTC":{name:"KHALID L. GARCIA",title:"Minister",agencyName:"Ministry of Transportation and Communications - CVAR"},
+      "RAA":{name:"ALEEYA L. SANTOS",title:"Director I",agencyName:"Regional Airports Authority"},
+      "RTFRB":{name:"ZUBAIR D. CRUZ",title:"Director I",agencyName:"Regional Transport Franchising and Regulatory Board - CVAR"},
+      "RLTO":{name:"HASSAN K. DIZON",title:"Director I",agencyName:"Regional Land Transportation Office - CVAR"},
+      "RMA":{name:"RASHID D. PALOMARES",title:"Director I",agencyName:"Regional Maritime Authority - CVAR"},
+      "RPMA":{name:"HAKIM L. SALVADOR",title:"Director I",agencyName:"Regional Ports Management Authority - CVAR"},
+      "RCC":{name:"HARUN H. PALOMARES",title:"Commissioner",agencyName:"Regional Communications Commission - CVAR"},
+      "RAB":{name:"INDIRA T. NAVARRO",title:"Director I",agencyName:"Regional Aeronautics Board - CVAR"},
+      "MOED":{name:"YASMIN K. TORRES",title:"Concurrent Minister",agencyName:"Ministry of Education - CVAR"},
+      "TVTA":{name:"JOHARA R. GALVEZ",title:"Director General",agencyName:"Technical and Vocational Training Authority - CVAR"},
+      "MILG":{name:"DAYANG L. ALVARO",title:"Minister",agencyName:"Ministry of Interior and Local Government - CVAR"},
+      "MTT":{name:"AIDA D. PADILLA",title:"Minister",agencyName:"Ministry of Trade and Tourism - CVAR"},
+      "CVFZ":{name:"ZUBAIR P. DOMINGO",title:"Director 1 (Port Administrator)",agencyName:"Costa Verde Freeport Zone - CVAR"},
+      "MHS":{name:"NURHANA C. RAMOS",title:"Minister",agencyName:"Ministry of Housing and Settlements - CVAR"},
+      "OGV":{name:"YASMIN K. TORRES",title:"Regional Governor",agencyName:"Office of the Regional Governor - CVAR"},
+      "RCA":{name:"HAKIM D. OCAMPO",title:"Executive Director",agencyName:"Regional Cooperatives Authority - CVAR"},
+      "MOH":{name:"LAILA C. ROSARIO",title:"Minister",agencyName:"Ministry of Health - CVAR"},
+      "MOLE":{name:"HANAN N. ROSARIO",title:"Minister",agencyName:"Ministry of Labor and Employment - CVAR"},
+      "MPW":{name:"YUSUF L. REYES",title:"Minister",agencyName:"Ministry of Public Works - CVAR"},
+      "MSWD":{name:"RAHMA D. MENDOZA",title:"Minister",agencyName:"Ministry of Social Welfare and Development - CVAR"},
+      "RPDA":{name:"SAID Z. CRUZ",title:"Director General",agencyName:"Regional Planning and Development Authority - CVAR"},
+      "MPOS":{name:"INDIRA U. ALONZO",title:"Minister",agencyName:"Ministry of Public Order and Safety - CVAR"},
+      "RHRC":{name:"NASSER K. LACSON",title:"Chairperson",agencyName:"Regional Human Rights Commission - CVAR"},
+      "MOST":{name:"HAKIM L. ABDULLAH",title:"Minister",agencyName:"Ministry of Science and Technology - CVAR"}
+    },
+    // Revenue classification schemes for certifications. classMap: collection type -> class column.
+    // NOTE: this default mapping needs the user's sign-off (flagged in the plan).
+    revConfig:{
+      schemes:{
+        standard:{
+          classes:["Contractor's Tax (100)","Fees and Charges (200)","Other Revenue (300)","Natural Wealth Tax (400)","Trust Receipts (500)"],
+          catchAll:"Other Revenue (300)",
+          map:{
+            "Contractor's Tax":"Contractor's Tax (100)",
+            "Fees and Charges":"Fees and Charges (200)",
+            "Rental Fees":"Fees and Charges (200)",
+            "Natural Wealth Tax":"Natural Wealth Tax (400)",
+            "Trust Receipts":"Trust Receipts (500)",
+            "Other Revenues":"Other Revenue (300)",
+            "Interest Income":"Other Revenue (300)",
+            "Unidentified":"Other Revenue (300)",
+            "Sale of OR":"Other Revenue (300)",
+            "Receipts from Unutilized Bid Docs Sales":"Other Revenue (300)",
+            "Hospital Income":"Other Revenue (300)",
+            "Sale/Installment Payments of Housing Units (MHS Specific)":"Other Revenue (300)",
+            "CASA (CASA Specific)":"Other Revenue (300)"
+          }
+        },
+        airport:{
+          classes:["Travel Tax","Parking Fee","Concessionaire Fee","DPSC"],
+          catchAll:"DPSC",
+          map:{"Travel Tax":"Travel Tax","Parking Fee":"Parking Fee","Concessionaire Fee":"Concessionaire Fee","DPSC":"DPSC"}
+        }
+      },
+      agencyScheme:{"RAA":"airport"}    // all other offices default to "standard"
+    },
+    certText:{
+      body:"This is to certify that the following amount of regional collections were verified to have been credited to the account of the Regional Treasury Office maintained with COSTA VERDE DEVELOPMENT BANK.",
+      purpose:"Confirmation of Deposited Collections"
+    },
+    letterhead:{
+      l1:"Regional Government",
+      l2:"COSTA VERDE AUTONOMOUS REGION",
+      l3:"MINISTRY OF FINANCE AND BUDGET",
+      l4:"REGIONAL TREASURY OFFICE",
+      logo:""
+    }
+  };
+}
+// Idempotent, data-loss-free upgrade of any stored/imported DB to the current schema.
+function migrateDB(d){
+  if(!d||typeof d!=="object")return seedClone();
+  d.transactions=Array.isArray(d.transactions)?d.transactions:[];
+  d.orgmap=Array.isArray(d.orgmap)?d.orgmap:[];
+  d.lists=(d.lists&&typeof d.lists==="object")?d.lists:{};
+  if(!Array.isArray(d.lists.collection_types))d.lists.collection_types=[];
+  d.audit=Array.isArray(d.audit)?d.audit:[];
+  d.targets=Array.isArray(d.targets)?d.targets:[];
+  // --- normalize settings first (new keys fall back to defaults; user values preserved) ---
+  d.settings=Object.assign(defaultSettings(),d.settings||{});
+  d.settings.currentUser=d.settings.currentUser||{name:"",initials:""};
+  d.settings.letterhead=Object.assign(defaultSettings().letterhead,d.settings.letterhead||{});
+  d.settings.agencyHeads=d.settings.agencyHeads||{};
+  d.settings.revConfig=d.settings.revConfig||defaultSettings().revConfig;
+  d.settings.certText=d.settings.certText||defaultSettings().certText;
+  if(!Array.isArray(d.settings.signatories))d.settings.signatories=defaultSettings().signatories;
+  d.issued_reports=Array.isArray(d.issued_reports)?d.issued_reports:[];
+  d.certSeq=(d.certSeq&&typeof d.certSeq==="object")?d.certSeq:{};
+  // --- versioned, idempotent migrations ---
+  if((d.schemaVersion||0)<1){
+    // year-scope legacy targets — existing migrated data is all FY2026
+    d.targets=d.targets.map(t=>(t&&t.year)?t:{ministry:t.ministry,year:"2026",target:t.target});
+    d.schemaVersion=1;
+  }
+  if((d.schemaVersion||0)<2){
+    // seed office-specific collection types
+    ["Hospital Income","Sale/Installment Payments of Housing Units (MHS Specific)","CASA (CASA Specific)"].forEach(t=>{if(d.lists.collection_types.indexOf(t)<0)d.lists.collection_types.push(t);});
+    // apply the office-confirmed certification-class mapping (one-time; safe — pre-dates the mapping editor)
+    const m=d.settings.revConfig.schemes.standard.map;
+    ["Sale of OR","Receipts from Unutilized Bid Docs Sales","Bid Docs sales","Hospital Income","Sale/Installment Payments of Housing Units (MHS Specific)","CASA (CASA Specific)"].forEach(k=>{m[k]="Other Revenue (300)";});
+    d.schemaVersion=2;
+  }
+  if((d.schemaVersion||0)<3){
+    // scrub stale April-2025 seed person-names so they never print by default — only clear UNTOUCHED seeds (keep office edits)
+    const oldHeads={MOAF:"SAID N. RAMOS",MENR:"IDRIS G. PASCUAL",MOTC:"DAYANG J. PALOMARES",RPMA:"SAID G. AMARILLO",RCC:"ZAHRA G. ROSARIO",RAA:"ALEEYA L. SANTOS",RMA:"MUSTAFA J. GARCIA",RLTO:"HASSAN K. DIZON",MOED:"SAID B. SORIANO",MILG:"ZAHRA K. BAUTISTA",MTT:"MARIAM H. ABDULLAH",CVFZ:"ZUBAIR P. DOMINGO",MHS:"YASMIN S. REYES"};
+    Object.keys(oldHeads).forEach(off=>{const h=d.settings.agencyHeads[off];if(h&&h.name===oldHeads[off]){h.name="";h.title="";}});
+    ["Almaera M. Samod","Sumalong N. Abdullah","Naila Z. Dimaraw, JD, CPA"].forEach(nm=>{(d.settings.signatories||[]).forEach(s=>{if(s.name===nm){s.name="";s.position="";}});});
+    d.schemaVersion=3;
+  }
+  if((d.schemaVersion||0)<4){
+    // populate current officials (May-2026 roster) into any blank slot — never overwrite an office edit
+    const def=defaultSettings();
+    Object.keys(def.agencyHeads).forEach(off=>{
+      const h=d.settings.agencyHeads[off]||(d.settings.agencyHeads[off]={}),dh=def.agencyHeads[off];
+      if(!h.name)h.name=dh.name;
+      if(!h.title)h.title=dh.title;
+      if(!h.agencyName)h.agencyName=dh.agencyName;
+    });
+    def.signatories.forEach((ds,i)=>{const s=d.settings.signatories[i];if(s&&!s.name){s.name=ds.name;s.position=ds.position;}});
+    d.schemaVersion=4;
+  }
+  d.transactions.forEach((t,i)=>{if(!t.id)t.id="tx-"+i+"-"+(t.date||"x");});
+  return d;
+}
+function currentUser(){const u=DB.settings&&DB.settings.currentUser;return (u&&u.name)?u.name:APP_USER;}
+function yearsInData(){return uniq(DB.transactions.map(t=>t.year)).sort();}
+function defaultYear(){const ys=yearsInData();return ys.length?ys[ys.length-1]:String(new Date().getFullYear());}
+
+/* ===== HELPERS ===== */
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+function peso(n){if(n==null||isNaN(n))return "PHP 0";return "PHP "+Number(n).toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function pesoShort(n){n=Number(n)||0;const a=Math.abs(n);
+  if(a>=1e9)return "PHP "+(n/1e9).toFixed(2)+"B";if(a>=1e6)return "PHP "+(n/1e6).toFixed(2)+"M";
+  if(a>=1e3)return "PHP "+(n/1e3).toFixed(1)+"K";return "PHP "+n.toFixed(0);}
+function toast(msg,err){const t=$("#toast");t.textContent=msg;t.className="toast show"+(err?" err":"");setTimeout(()=>t.className="toast",2200);}
+function escapeHtml(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function orgInfo(code){return DB.orgmap.find(o=>o.org_code===code)||{};}
+function targetFor(m,year){
+  year=(year===undefined)?YEAR:year;
+  const ts=DB.targets.filter(x=>x.ministry===m&&(!year||String(x.year)===String(year)));
+  if(ts.length)return ts.reduce((s,x)=>s+(Number(x.target)||0),0);
+  const legacy=DB.targets.find(x=>x.ministry===m&&x.year==null);
+  return legacy?Number(legacy.target)||0:0;
+}
+function uniq(arr){return [...new Set(arr.filter(x=>x!=null&&x!==""))];}
+function monthName(t){if(t.month)return t.month;if(t.date){const d=new Date(t.date);if(!isNaN(d))return MONTHS[d.getMonth()];}return "";}
+function logAudit(action,detail){
+  DB.audit.unshift({ts:new Date().toISOString().slice(0,19).replace("T"," "),action,detail,by:currentUser()});
+  if(DB.audit.length>2000)DB.audit.length=2000;
+}
+
+/* ===== NAV ===== */
+$$("nav button").forEach(b=>b.onclick=()=>{
+  $$("nav button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  $$(".tab").forEach(t=>t.classList.remove("active"));
+  $("#tab-"+b.dataset.tab).classList.add("active");
+  renderAll();
+});
+
+/* ===== DROPDOWNS ===== */
+function fillSelect(el,items,opts){
+  opts=opts||{};
+  const cur=el.value;
+  el.innerHTML=(opts.all?'<option value="">All</option>':opts.blank?'<option value="">- select -</option>':'')
+    +items.map(i=>`<option>${i}</option>`).join("");
+  if(opts.keep&&items.includes(cur))el.value=cur;
+}
+function refreshDropdowns(){
+  fillSelect($("#f_org_code"),DB.lists.org_codes,{blank:true});
+  fillSelect($("#f_payment_method"),DB.lists.payment_methods,{blank:true});
+  fillSelect($("#f_lbp_branch"),DB.lists.lbp_branches,{blank:true});
+  fillSelect($("#f_type"),DB.lists.collection_types,{blank:true});
+  fillSelect($("#flt_ministry"),uniq(DB.transactions.map(t=>t.ministry)).sort(),{all:true,keep:true});
+  fillSelect($("#flt_office"),uniq(DB.transactions.map(t=>t.office)).sort(),{all:true,keep:true});
+  fillSelect($("#flt_month"),MONTHS,{all:true,keep:true});
+  fillSelect($("#flt_type"),DB.lists.collection_types,{all:true,keep:true});
+  fillSelect($("#flt_tagging"),["Actual","Target"],{all:true,keep:true});
+  fillSelect($("#nc_tmin"),DB.lists.ministries,{});
+  fillSelect($("#nc_type_class"),stdScheme().classes,{});
+}
+function refreshYearSelect(){
+  const ys=yearsInData();
+  $("#globalYear").innerHTML='<option value="">All Years</option>'+ys.map(y=>`<option>${escapeHtml(y)}</option>`).join("");
+  $("#globalYear").value=YEAR;
+}
+$("#globalYear").onchange=function(){YEAR=this.value;renderAll();};
+
+/* ===== ENTRY: auto-fill ===== */
+$("#f_org_code").onchange=function(){
+  const o=orgInfo(this.value);
+  $("#f_ministry").value=o.ministry||"";
+  $("#f_office").value=o.moa||"";
+  $("#f_clearing").value=o.clearing||"";
+};
+$("#entryForm").onsubmit=function(e){
+  e.preventDefault();
+  const id=$("#f_id").value;
+  const date=$("#f_date").value;
+  const org=$("#f_org_code").value,pm=$("#f_payment_method").value,ty=$("#f_type").value;
+  if(!org)return toast("Select an Organizational Code",true);
+  if(!pm)return toast("Select a Payment Method",true);
+  if(!ty)return toast("Select a Type of Collection",true);
+  if(!date||isNaN(new Date(date)))return toast("Enter a valid Transaction Date",true);
+  const amt=parseFloat($("#f_amount").value);
+  if(isNaN(amt)||amt<0)return toast("Enter a valid, non-negative Amount",true);
+  const d=new Date(date);
+  const o=orgInfo(org);
+  const rec={
+    id:id||("tx-"+Date.now()),
+    org_code:org,clearing:o.clearing||"",ministry:o.ministry||"",office:o.moa||"",
+    payment_method:pm,lbp_branch:$("#f_lbp_branch").value,
+    amount:amt,
+    year:String(d.getFullYear()),month:MONTHS[d.getMonth()],day:String(d.getDate()).padStart(2,"0"),date:date,
+    type:ty,tagging:$("#f_tagging").value,remarks:$("#f_remarks").value
+  };
+  if(id){
+    const i=DB.transactions.findIndex(t=>t.id===id);
+    if(i<0){toast("Edit target not found — it may have been deleted",true);return;}
+    DB.transactions[i]=rec;logAudit("Edit",`${rec.org_code} ${peso(rec.amount)} (${rec.type})`);
+    toast("Entry updated");
+  }else{
+    DB.transactions.push(rec);logAudit("Add",`${rec.org_code} ${peso(rec.amount)} (${rec.type})`);
+    toast("Entry added");
+  }
+  save();resetForm();renderAll();
+};
+$("#cancelEdit").onclick=resetForm;
+function resetForm(){
+  $("#entryForm").reset();$("#f_id").value="";
+  $("#f_ministry").value="";$("#f_office").value="";$("#f_clearing").value="";
+  $("#entryTitle").textContent="New Collection Entry";
+  $("#saveBtn").textContent="Add Entry";$("#cancelEdit").style.display="none";
+  $("#f_date").value=new Date().toISOString().slice(0,10);
+}
+function editEntry(id){
+  const t=DB.transactions.find(x=>x.id===id);if(!t)return;
+  $("#f_id").value=t.id;$("#f_org_code").value=t.org_code;$("#f_org_code").onchange();
+  $("#f_payment_method").value=t.payment_method||"";$("#f_lbp_branch").value=t.lbp_branch||"";
+  $("#f_amount").value=t.amount;$("#f_date").value=t.date||"";
+  $("#f_type").value=t.type||"";$("#f_tagging").value=t.tagging||"Actual";$("#f_remarks").value=t.remarks||"";
+  $("#entryTitle").textContent="Edit Entry";$("#saveBtn").textContent="Save Changes";$("#cancelEdit").style.display="";
+  $$("nav button").forEach(x=>x.classList.remove("active"));
+  document.querySelector('nav button[data-tab="entry"]').classList.add("active");
+  $$(".tab").forEach(t=>t.classList.remove("active"));$("#tab-entry").classList.add("active");
+  window.scrollTo(0,0);
+}
+function delEntry(id){
+  const t=DB.transactions.find(x=>x.id===id);if(!t)return;
+  if(!confirm("Delete this entry?\n"+t.org_code+" "+peso(t.amount)))return;
+  DB.transactions=DB.transactions.filter(x=>x.id!==id);
+  logAudit("Delete",`${t.org_code} ${peso(t.amount)} (${t.type})`);
+  save();renderAll();toast("Entry deleted");
+}
+
+/* ===== RECENT TABLE ===== */
+function renderRecent(){
+  const cols=["date","org_code","ministry","office","type","amount","tagging"];
+  $("#recentTbl thead").innerHTML="<tr>"+cols.map(c=>`<th>${c.replace("_"," ")}</th>`).join("")+"<th>Actions</th></tr>";
+  const rows=[...DB.transactions].slice(-40).reverse();
+  $("#recentTbl tbody").innerHTML=rows.map(t=>"<tr>"+
+    `<td>${escapeHtml(t.date)}</td><td>${escapeHtml(t.org_code)}</td><td>${escapeHtml(t.ministry)}</td><td>${escapeHtml(t.office)}</td>`+
+    `<td>${escapeHtml(t.type)}</td><td class="num">${peso(t.amount)}</td>`+
+    `<td><span class="${t.tagging==='Target'?'tag-target':'tag-actual'}">${escapeHtml(t.tagging)}</span></td>`+
+    `<td><button class="btn sm gray" data-act="edit" data-id="${escapeHtml(t.id)}">Edit</button> `+
+    `<button class="btn sm red" data-act="del" data-id="${escapeHtml(t.id)}">Del</button></td></tr>`).join("");
+}
+$("#recentTbl").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-act]");if(!b)return;
+  if(b.dataset.act==="edit")editEntry(b.dataset.id);
+  else if(b.dataset.act==="del")delEntry(b.dataset.id);
+});
+
+/* ===== RECORDS (filterable) ===== */
+let sortKey="date",sortDir=-1;
+function filteredTx(){
+  const q=$("#flt_search").value.toLowerCase();
+  const fm=$("#flt_ministry").value,fo=$("#flt_office").value,fmo=$("#flt_month").value,
+        ft=$("#flt_type").value,ftag=$("#flt_tagging").value,
+        from=$("#flt_from").value,to=$("#flt_to").value;
+  return DB.transactions.filter(t=>{
+    if(fm&&t.ministry!==fm)return false;
+    if(fo&&t.office!==fo)return false;
+    if(fmo&&monthName(t)!==fmo)return false;
+    if(ft&&t.type!==ft)return false;
+    if(ftag&&t.tagging!==ftag)return false;
+    if(from&&(t.date||"")<from)return false;
+    if(to&&(t.date||"")>to)return false;
+    if(q){const blob=[t.org_code,t.ministry,t.office,t.type,t.payment_method,t.lbp_branch,t.remarks,t.clearing].join(" ").toLowerCase();if(!blob.includes(q))return false;}
+    return true;
+  });
+}
+function renderRecords(){
+  const cols=[["date","Date"],["org_code","Org Code"],["ministry","Ministry"],["office","Office"],
+    ["payment_method","Payment"],["lbp_branch","Branch"],["type","Type"],["tagging","Tag"],["amount","Amount"]];
+  $("#recTbl thead").innerHTML="<tr>"+cols.map(c=>
+    `<th class="${c[0]==='amount'?'num':''}" data-sort="${c[0]}">${c[1]}${sortKey===c[0]?(sortDir>0?" ^":" v"):""}</th>`).join("")+"</tr>";
+  let rows=filteredTx();
+  rows.sort((a,b)=>{let x=a[sortKey],y=b[sortKey];
+    if(sortKey==="amount"){x=+x||0;y=+y||0;}else{x=(x||"").toString();y=(y||"").toString();}
+    return x<y?-sortDir:x>y?sortDir:0;});
+  const tot=rows.reduce((s,t)=>s+(+t.amount||0),0);
+  $("#recStats").textContent=`${rows.length.toLocaleString()} records | ${peso(tot)}`;
+  const show=rows.slice(0,500);
+  $("#recTbl tbody").innerHTML=show.map(t=>"<tr>"+
+    `<td>${escapeHtml(t.date)}</td><td>${escapeHtml(t.org_code)}</td><td>${escapeHtml(t.ministry)}</td><td>${escapeHtml(t.office)}</td>`+
+    `<td>${escapeHtml(t.payment_method)}</td><td>${escapeHtml(t.lbp_branch)}</td><td>${escapeHtml(t.type)}</td>`+
+    `<td><span class="${t.tagging==='Target'?'tag-target':'tag-actual'}">${escapeHtml(t.tagging)}</span></td>`+
+    `<td class="num">${peso(t.amount)}</td></tr>`).join("")
+    +(rows.length>500?`<tr><td colspan="9" class="muted">Showing first 500 of ${rows.length}. Refine filters or export CSV for all.</td></tr>`:"");
+}
+function setSort(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=1;}renderRecords();}
+$("#recTbl thead").addEventListener("click",e=>{const th=e.target.closest("th[data-sort]");if(th)setSort(th.dataset.sort);});
+$$("#tab-records input,#tab-records select").forEach(el=>el.oninput=renderRecords);
+$("#clearFlt").onclick=()=>{$$("#tab-records input,#tab-records select").forEach(el=>el.value="");renderRecords();};
+
+/* ===== DASHBOARD ===== */
+function actualTx(){return DB.transactions.filter(t=>(t.tagging||"Actual")!=="Target"&&(!YEAR||String(t.year)===String(YEAR)));}
+function renderDash(){
+  const tx=actualTx();
+  const total=tx.reduce((s,t)=>s+(+t.amount||0),0);
+  const totTarget=DB.targets.filter(t=>!YEAR||String(t.year)===String(YEAR)).reduce((s,t)=>s+(+t.target||0),0);
+  const pct=totTarget?(total/totTarget*100):0;
+  const kpis=[
+    {label:"Total Collected",val:peso(total),sm:1},
+    {label:(YEAR||"All")+" Target",val:peso(totTarget),sm:1},
+    {label:"% Accomplishment",val:pct.toFixed(1)+"%"},
+    {label:"Transactions",val:tx.length.toLocaleString()},
+    {label:"Ministries Active",val:uniq(tx.map(t=>t.ministry)).length},
+  ];
+  $("#kpiRow").innerHTML=kpis.map(k=>`<div class="card kpi"><div class="label">${k.label}</div><div class="val ${k.sm?'sm':''}">${k.val}</div></div>`).join("");
+  const mtot=MONTHS.map(m=>tx.filter(t=>monthName(t)===m).reduce((s,t)=>s+(+t.amount||0),0));
+  $("#dashChartTitle").textContent="Monthly Collections ("+(YEAR||"All Years")+")";
+  $("#monthlyChart").innerHTML=barChartSVG(MONTHS.map(m=>m.slice(0,3)),mtot);
+  $("#typeBars").innerHTML=sectionBars(groupSum(tx,"type"),total);
+  $("#payBars").innerHTML=sectionBars(groupSum(tx,"payment_method"),total);
+  $("#officeBars").innerHTML=sectionBars(groupSum(tx,"office").slice(0,8),total);
+}
+function groupSum(tx,key){
+  const m={};tx.forEach(t=>{const k=t[key]||"(blank)";m[k]=(m[k]||0)+(+t.amount||0);});
+  return Object.entries(m).sort((a,b)=>b[1]-a[1]);
+}
+function sectionBars(entries,total){
+  const max=Math.max(1,...entries.map(e=>e[1]));
+  return entries.map(e=>{
+    const k=e[0],v=e[1];const w=(v/max*100).toFixed(1);
+    return `<div class="sbrow"><div title="${escapeHtml(k)}" style="overflow:hidden;text-overflow:ellipsis">${escapeHtml(k)}</div>`+
+      `<div class="bar-track"><div class="bar-fill" style="width:${w}%;background:linear-gradient(90deg,#3b82f6,#22c55e)"></div></div>`+
+      `<div style="text-align:right" class="muted">${pesoShort(v)}</div></div>`;
+  }).join("")||'<span class="muted">No data</span>';
+}
+function barChartSVG(labels,vals){
+  const W=Math.max(520,labels.length*46),H=240,pad=34,bw=W/labels.length*0.6;
+  const max=Math.max(1,...vals);
+  let bars="";
+  labels.forEach((l,i)=>{
+    const x=i*(W/labels.length)+(W/labels.length-bw)/2;
+    const h=(vals[i]/max)*(H-pad*2);
+    const y=H-pad-h;
+    bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="3" fill="url(#g)"><title>${l}: ${peso(vals[i])}</title></rect>`;
+    bars+=`<text x="${x+bw/2}" y="${H-pad+14}" font-size="10" fill="#93a4c4" text-anchor="middle">${l}</text>`;
+    if(vals[i]>0)bars+=`<text x="${x+bw/2}" y="${y-4}" font-size="9" fill="#cbd5e1" text-anchor="middle">${pesoShort(vals[i])}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:${W}px">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#1d4ed8"/></linearGradient></defs>
+    <line x1="${pad}" y1="${H-pad}" x2="${W}" y2="${H-pad}" stroke="#2a3a5e"/>${bars}</svg>`;
+}
+
+/* ===== MINISTRY TABLE ===== */
+function ministryRows(){
+  const tx=actualTx();
+  const all=uniq([...DB.lists.ministries,...DB.targets.map(t=>t.ministry),...tx.map(t=>t.ministry)]);
+  return all.map(m=>{
+    const actual=tx.filter(t=>t.ministry===m).reduce((s,t)=>s+(+t.amount||0),0);
+    const target=targetFor(m);
+    const pct=target?actual/target*100:(actual>0?100:0);
+    return {m,target,actual,pct,bal:target-actual};
+  }).sort((a,b)=>b.actual-a.actual);
+}
+function renderMinistry(){
+  $("#minTitle").textContent=(YEAR||"All Years")+" Targets vs Collections (by Ministry)";
+  $("#minTbl thead").innerHTML="<tr><th>Ministry</th><th class='num'>"+(YEAR||"All")+" Target</th><th class='num'>Collected</th>"+
+    "<th class='num'>Balance</th><th class='num'>%</th><th>Progress</th></tr>";
+  const rows=ministryRows();
+  $("#minTbl tbody").innerHTML=rows.map(r=>{
+    const cls=r.pct>=100?"ok":r.pct>=50?"mid":"low";
+    const w=Math.min(100,r.pct).toFixed(1);
+    const col=r.pct>=100?"#22c55e":r.pct>=50?"#f59e0b":"#ef4444";
+    return `<tr><td><b>${r.m}</b></td><td class="num">${peso(r.target)}</td><td class="num">${peso(r.actual)}</td>`+
+      `<td class="num">${peso(r.bal)}</td><td class="num"><span class="pill ${cls}">${r.pct.toFixed(1)}%</span></td>`+
+      `<td><div class="bar-track" style="min-width:120px"><div class="bar-fill" style="width:${w}%;background:${col}"></div></div></td></tr>`;
+  }).join("");
+  const tt=rows.reduce((s,r)=>s+r.target,0),ta=rows.reduce((s,r)=>s+r.actual,0);
+  $("#minTbl tbody").innerHTML+=`<tr style="font-weight:700;background:var(--panel2)"><td>TOTAL</td>`+
+    `<td class="num">${peso(tt)}</td><td class="num">${peso(ta)}</td><td class="num">${peso(tt-ta)}</td>`+
+    `<td class="num">${tt?(ta/tt*100).toFixed(1):0}%</td><td></td></tr>`;
+}
+
+/* ===== AUDIT ===== */
+function renderAudit(){
+  $("#auditTbl thead").innerHTML="<tr><th>Timestamp</th><th>Action</th><th>Detail</th><th>By</th></tr>";
+  $("#auditTbl tbody").innerHTML=DB.audit.slice(0,500).map(a=>
+    `<tr><td>${escapeHtml(a.ts)}</td><td>${escapeHtml(a.action)}</td><td>${escapeHtml(a.detail)}</td><td>${escapeHtml(a.by)}</td></tr>`).join("")
+    ||'<tr><td colspan="4" class="muted">No changes logged yet.</td></tr>';
+  $("#auditStats").textContent=DB.audit.length+" entries";
+}
+$("#clearAudit").onclick=()=>confirmWord("CLEAR","This permanently erases the entire in-app audit log.",()=>{DB.audit=[];save();renderAudit();toast("Audit log cleared");});
+
+/* ===== CSV EXPORT ===== */
+function toCSV(rows,cols){
+  const esc=v=>{v=v==null?"":String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  return cols.join(",")+"\n"+rows.map(r=>cols.map(c=>esc(r[c])).join(",")).join("\n");
+}
+function download(name,content,type){
+  const b=new Blob([content],{type:type||"text/plain"});const u=URL.createObjectURL(b);
+  const a=document.createElement("a");a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);
+}
+
+/* ===== MODAL / CONFIRM / BACKUP / IDENTITY HELPERS ===== */
+function showModal(html){$("#modalBody").innerHTML=html;$("#modalBg").classList.add("show");}
+function hideModal(){$("#modalBg").classList.remove("show");$("#modalBody").innerHTML="";}
+$("#modalBg").onclick=e=>{if(e.target===$("#modalBg"))hideModal();};
+// Friction gate for destructive actions (honest friction, NOT authentication).
+function confirmWord(word,message,cb){
+  showModal(`<h2>Please confirm</h2><p class="muted">${escapeHtml(message)}</p>`+
+    `<p>Type <b>${escapeHtml(word)}</b> to proceed:</p>`+
+    `<input id="cw_input" placeholder="${escapeHtml(word)}" style="margin-bottom:14px">`+
+    `<div class="row"><button class="btn red" id="cw_ok">Confirm</button><button class="btn gray" id="cw_cancel">Cancel</button></div>`);
+  $("#cw_input").focus();
+  $("#cw_input").onkeydown=ev=>{if(ev.key==="Enter")$("#cw_ok").click();};
+  $("#cw_cancel").onclick=hideModal;
+  $("#cw_ok").onclick=()=>{if($("#cw_input").value.trim().toUpperCase()===word.toUpperCase()){hideModal();cb();}else toast("Text did not match — cancelled",true);};
+}
+function validateDB(d){
+  if(!d||typeof d!=="object")throw new Error("not a JSON object");
+  if(!Array.isArray(d.transactions))throw new Error("missing transactions[]");
+  const bad=d.transactions.find(t=>t&&t.amount!=null&&isNaN(Number(t.amount)));
+  if(bad)throw new Error("a transaction has a non-numeric amount");
+  return d;
+}
+function exportBackup(prefix){download((prefix||"collection_backup")+"_"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(DB,null,2),"application/json");}
+function seedYears(){return uniq(SEED.transactions.map(t=>t.year||(t.date?String(t.date).slice(0,4):"")));}
+// Auto-export first if live data holds any year beyond the seed (protects accumulated multi-year history).
+function backupIfHistory(){
+  const sy=seedYears();
+  const hasExtra=uniq(DB.transactions.map(t=>t.year)).some(y=>sy.indexOf(y)<0);
+  if(hasExtra){exportBackup("autobackup_before_overwrite");toast("Auto-backup downloaded first");}
+  return hasExtra;
+}
+function promptUserName(){
+  showModal(`<h2>Welcome</h2><p class="muted">Enter your name so changes are attributed to you in the audit log. Stored only in this browser.</p>`+
+    `<label>Your name</label><input id="pu_name" placeholder="e.g. Juan Dela Cruz" style="margin-bottom:10px">`+
+    `<label>Initials (optional)</label><input id="pu_init" placeholder="e.g. JDC" style="margin-bottom:14px">`+
+    `<div class="row"><button class="btn green" id="pu_ok">Save</button><button class="btn gray" id="pu_skip">Skip</button></div>`);
+  $("#pu_name").focus();
+  $("#pu_skip").onclick=hideModal;
+  $("#pu_ok").onclick=()=>{const n=$("#pu_name").value.trim();if(!n)return toast("Enter a name or Skip",true);
+    DB.settings.currentUser={name:n,initials:$("#pu_init").value.trim()};save();hideModal();renderAll();toast("Signed in as "+n);};
+}
+$("#exportCsv").onclick=()=>{
+  const cols=["date","org_code","clearing","ministry","office","payment_method","lbp_branch","type","tagging","amount","remarks"];
+  download("collections_export.csv",toCSV(filteredTx(),cols),"text/csv");toast("CSV exported");
+};
+$("#exportMinCsv").onclick=()=>{
+  download("targets_vs_collections.csv",toCSV(ministryRows(),["m","target","actual","bal","pct"]),"text/csv");toast("CSV exported");
+};
+
+/* ===== BACKUP / IMPORT / RESET ===== */
+$("#exportJson").onclick=()=>{exportBackup("collection_backup");toast("Backup exported");};
+$("#importJsonBtn").onclick=()=>$("#importJson").click();
+$("#importJson").onchange=function(){
+  const f=this.files[0];if(!f)return;const inputEl=this;const r=new FileReader();
+  r.onload=()=>{
+    let d;try{d=validateDB(JSON.parse(r.result));}catch(e){toast("Invalid backup: "+e.message,true);inputEl.value="";return;}
+    confirmWord("IMPORT","This REPLACES all current data with the imported file.",()=>{
+      backupIfHistory();
+      DB=migrateDB(d);YEAR=defaultYear();save();refreshDropdowns();renderAll();toast("Backup imported");
+    });
+    inputEl.value="";
+  };
+  r.readAsText(f);
+};
+$("#resetSeed").onclick=()=>confirmWord("RESET","This replaces ALL current data with the original migrated 2026 seed.",()=>{
+  backupIfHistory();
+  DB=seedClone();YEAR=defaultYear();save();refreshDropdowns();renderAll();toast("Reset to migrated data");
+});
+
+/* ===== MANAGE LISTS ===== */
+$("#addOrg").onclick=()=>{
+  const c=$("#nc_code").value.trim();if(!c)return toast("Enter org code",true);
+  DB.orgmap.push({org_code:c,clearing:$("#nc_clearing").value.trim(),ministry:$("#nc_ministry").value.trim(),moa:$("#nc_office").value.trim()});
+  if(!DB.lists.org_codes.includes(c))DB.lists.org_codes.push(c);
+  const min=$("#nc_ministry").value.trim();if(min&&!DB.lists.ministries.includes(min))DB.lists.ministries.push(min);
+  logAudit("Add Org Code",c);save();refreshDropdowns();["nc_code","nc_clearing","nc_ministry","nc_office"].forEach(i=>$("#"+i).value="");toast("Org code added");
+};
+$("#addType").onclick=()=>{
+  const t=$("#nc_type").value.trim();if(!t)return toast("Enter a type name",true);
+  if(!DB.lists.collection_types.includes(t))DB.lists.collection_types.push(t);
+  const cls=$("#nc_type_class").value;if(cls)stdScheme().map[t]=cls;
+  logAudit("Add Type",t+" -> "+(cls||"(unmapped)"));save();refreshDropdowns();renderClassMap();$("#nc_type").value="";toast("Type added");
+};
+$("#setTarget").onclick=()=>{
+  const m=$("#nc_tmin").value;const y=String($("#nc_tyear").value||YEAR||defaultYear());
+  const v=parseFloat($("#nc_tval").value);
+  if(!m)return toast("Select a ministry",true);
+  if(isNaN(v)||v<0)return toast("Enter a valid target amount",true);
+  const ex=DB.targets.find(x=>x.ministry===m&&String(x.year)===y);
+  if(ex)ex.target=v;else DB.targets.push({ministry:m,year:y,target:v});
+  logAudit("Set Target",m+" ("+y+") = "+peso(v));save();renderAll();$("#nc_tval").value="";toast("Target saved for "+y);
+};
+/* ===== SIGNATORY EDITOR ===== */
+function renderSigEditor(){
+  const sigs=DB.settings.signatories||[];
+  $("#sigEditor").innerHTML=sigs.map((s,i)=>
+    `<div class="row" style="margin-bottom:8px">`+
+    `<input class="sig-role" data-i="${i}" value="${escapeHtml(s.role_label)}" placeholder="Role" style="max-width:170px">`+
+    `<input class="sig-name" data-i="${i}" value="${escapeHtml(s.name)}" placeholder="Name" style="max-width:210px">`+
+    `<input class="sig-pos" data-i="${i}" value="${escapeHtml(s.position)}" placeholder="Position" style="max-width:230px">`+
+    `<button class="btn red sm sig-del" data-i="${i}">Remove</button></div>`).join("")
+    ||'<p class="muted">No signatories yet — add one below.</p>';
+}
+$("#sigEditor").addEventListener("input",e=>{const i=+e.target.dataset.i;const s=DB.settings.signatories[i];if(!s)return;
+  if(e.target.classList.contains("sig-role"))s.role_label=e.target.value;
+  else if(e.target.classList.contains("sig-name"))s.name=e.target.value;
+  else if(e.target.classList.contains("sig-pos"))s.position=e.target.value;
+  save();});
+$("#sigEditor").addEventListener("click",e=>{if(e.target.classList.contains("sig-del")){const i=+e.target.dataset.i;DB.settings.signatories.splice(i,1);save();renderSigEditor();toast("Signatory removed");}});
+$("#addSig").onclick=()=>{DB.settings.signatories.push({role_label:"",name:"",position:""});save();renderSigEditor();};
+$("#changeName").onclick=promptUserName;
+/* ===== CLASS-MAP + AGENCY-HEAD EDITORS ===== */
+function stdScheme(){return DB.settings.revConfig.schemes.standard;}
+function renderClassMap(){
+  const types=(DB.lists.collection_types||[]).slice().sort();
+  const sc=stdScheme();const classes=sc.classes;
+  $("#classMapEditor").innerHTML=`<table><thead><tr><th class="lname">Collection Type</th><th>Certification Column</th></tr></thead><tbody>`+
+    types.map(t=>`<tr><td class="lname">${escapeHtml(t)}</td><td><select class="cm-sel" data-t="${escapeHtml(t)}">`+
+      classes.map(c=>`<option${(sc.map[t]||sc.catchAll)===c?" selected":""}>${escapeHtml(c)}</option>`).join("")+
+      `</select></td></tr>`).join("")+`</tbody></table>`;
+}
+$("#classMapEditor").addEventListener("change",e=>{if(e.target.classList.contains("cm-sel")){stdScheme().map[e.target.dataset.t]=e.target.value;save();toast("Mapping updated");if($("#rpt_type").value==="cert")renderReport();}});
+function agencyList(){return uniq([...DB.orgmap.map(o=>o.moa),...DB.transactions.map(t=>t.office)]).filter(Boolean).sort();}
+function renderAgencyHeads(){
+  const list=agencyList();const ah=DB.settings.agencyHeads;
+  $("#headEditor").innerHTML=list.map(off=>{
+    const h=ah[off]||{};
+    return `<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>${escapeHtml(off)}</b>`+
+      `<div class="row" style="margin-top:6px">`+
+      `<input class="ah-name" data-o="${escapeHtml(off)}" value="${escapeHtml(h.name||"")}" placeholder="Head name" style="max-width:210px">`+
+      `<input class="ah-title" data-o="${escapeHtml(off)}" value="${escapeHtml(h.title||"")}" placeholder="Title" style="max-width:160px">`+
+      `<input class="ah-agency" data-o="${escapeHtml(off)}" value="${escapeHtml(h.agencyName||"")}" placeholder="Official agency name" style="max-width:300px">`+
+      `</div></div>`;
+  }).join("");
+}
+$("#headEditor").addEventListener("input",e=>{const o=e.target.dataset.o;if(!o)return;const h=DB.settings.agencyHeads[o]||(DB.settings.agencyHeads[o]={});
+  if(e.target.classList.contains("ah-name"))h.name=e.target.value;
+  else if(e.target.classList.contains("ah-title"))h.title=e.target.value;
+  else if(e.target.classList.contains("ah-agency"))h.agencyName=e.target.value;
+  save();});
+
+/* ===== PRINT REPORTS ===== */
+const TAX_BUCKETS=["Natural Wealth Tax","Contractor's Tax","Travel Tax","Fees and Charges","Other Revenues"];
+function bucketOf(type){return TAX_BUCKETS.includes(type)?type:"Other Revenues";}
+function fullName(code){return MINNAMES[code]||code;}
+// Letterhead: regional emblem centered on top, ministry seal left, treasury office seal right.
+function officialBanner(centerHTML,topRightHTML){
+  return `<div class="rpt-banner">`+
+    (topRightHTML?`<div class="rpt-cno">${topRightHTML}</div>`:"")+
+    `<img class="emblem" src="${LOGO_EMBLEM}" alt="Regional emblem">`+
+    `<img class="seal-l" src="${LOGO_MINISTRY}" alt="MFB seal">`+
+    `<img class="seal-r" src="${LOGO_OFFICE}" alt="RTO seal">`+
+    `<div class="rpt-head">${centerHTML}</div></div>`;
+}
+function rptHeader(){
+  const lh=DB.settings.letterhead||{};
+  return officialBanner(
+    `<div class="r1">${escapeHtml(lh.l1||"")}</div>`+
+    `<div class="r2">${escapeHtml(lh.l2||"")}</div>`+
+    `<div class="r3">${escapeHtml(lh.l3||"")}</div>`+
+    `<div class="r3">${escapeHtml(lh.l4||"")}</div>`,"");
+}
+function rptFooter(){
+  return `<div class="rpt-foot"><div>Generated: ${escapeHtml(new Date().toLocaleString("en-PH"))} &nbsp;|&nbsp; by ${escapeHtml(currentUser())}</div></div>`+certSigsHTML();
+}
+function setupRptControls(){
+  fillSelect($("#rpt_ministry"),uniq(DB.transactions.map(t=>t.ministry)).sort(),{all:true,keep:true});
+  fillSelect($("#rpt_office"),uniq(DB.transactions.map(t=>t.office)).sort(),{all:true,keep:true});
+  fillSelect($("#rpt_month"),MONTHS,{all:true,keep:true});
+  fillSelect($("#rpt_type_filter"),DB.lists.collection_types,{all:true,keep:true});
+  fillSelect($("#cert_ministry"),uniq([...DB.orgmap.map(o=>o.ministry),...DB.transactions.map(t=>t.ministry)]).sort(),{blank:true,keep:true});
+  refreshCertAgency();
+  fillSelect($("#cert_month"),MONTHS,{all:true,keep:true});
+}
+function certAgenciesFor(min){return uniq([...DB.orgmap.filter(o=>o.ministry===min).map(o=>o.moa),...DB.transactions.filter(t=>t.ministry===min).map(t=>t.office)]).filter(Boolean).sort();}
+function refreshCertAgency(){const min=$("#cert_ministry").value;fillSelect($("#cert_agency"),min?certAgenciesFor(min):[],{blank:true,keep:true});}
+/* ===== NESTED (drill-down) REPORT ENGINE — single pass Ministry -> Office ===== */
+function nestedReportData(tx,mode,showEmpty){
+  const cols = mode==="summary" ? MONTHS.map(m=>({key:m,label:m.slice(0,3).toUpperCase()}))
+                                : TAX_BUCKETS.map(b=>({key:b,label:b}));
+  const colOf = mode==="summary" ? (t=>monthName(t)) : (t=>bucketOf(t.type));
+  const map={};
+  tx.forEach(t=>{
+    const min=t.ministry||"(unmapped)",off=t.office||"(unmapped)",ck=colOf(t),amt=+t.amount||0;
+    (map[min]=map[min]||{});(map[min][off]=map[min][off]||{});
+    map[min][off][ck]=(map[min][off][ck]||0)+amt;
+  });
+  if(showEmpty){DB.orgmap.forEach(o=>{if(o.ministry&&o.moa){(map[o.ministry]=map[o.ministry]||{});(map[o.ministry][o.moa]=map[o.ministry][o.moa]||{});}});}
+  const colTot={};cols.forEach(c=>colTot[c.key]=0);let grand=0;
+  const ministries=Object.keys(map).sort().map(min=>{
+    const sub={};cols.forEach(c=>sub[c.key]=0);let minTot=0;
+    let offices=Object.keys(map[min]).sort().map(off=>{
+      const cells={};let rowTot=0;
+      cols.forEach(c=>{const v=map[min][off][c.key]||0;cells[c.key]=v;rowTot+=v;});
+      return {name:off,cells,total:rowTot};
+    });
+    if(!showEmpty)offices=offices.filter(o=>o.total!==0);
+    offices.forEach(o=>{cols.forEach(c=>sub[c.key]+=o.cells[c.key]);minTot+=o.total;});
+    cols.forEach(c=>colTot[c.key]+=sub[c.key]);grand+=minTot;
+    return {name:min,fullName:fullName(min),offices,subtotal:{cells:sub,total:minTot}};
+  }).filter(m=>showEmpty||m.subtotal.total!==0||m.offices.length);
+  return {mode,cols,ministries,colTot,grand};
+}
+function nestedReportHTML(data){
+  const cols=data.cols;
+  let html=`<table><thead><tr><th class="lname">Ministry / Office</th>`+cols.map(c=>`<th>${escapeHtml(c.label)}</th>`).join("")+`<th>TOTAL</th></tr></thead><tbody>`;
+  data.ministries.forEach(m=>{
+    html+=`<tr class="grp"><td class="lname"><b>${escapeHtml(m.name)}</b> ${m.fullName!==m.name?'<span style="color:#555">- '+escapeHtml(m.fullName)+'</span>':''}</td>`+
+      cols.map(c=>`<td class="num"><b>${fmtN(m.subtotal.cells[c.key])}</b></td>`).join("")+`<td class="num"><b>${fmtN(m.subtotal.total)}</b></td></tr>`;
+    m.offices.forEach(o=>{
+      html+=`<tr><td class="lname subrow">${escapeHtml(o.name)}</td>`+
+        cols.map(c=>`<td class="num">${fmtN(o.cells[c.key])}</td>`).join("")+`<td class="num">${fmtN(o.total)}</td></tr>`;
+    });
+  });
+  html+=`<tr class="tot"><td class="lname">GRAND TOTAL</td>`+cols.map(c=>`<td class="num">${fmtN(data.colTot[c.key])}</td>`).join("")+`<td class="num">${fmtN(data.grand)}</td></tr></tbody></table>`;
+  return html;
+}
+function nestedCSV(data){
+  const header=["Level","Name",...data.cols.map(c=>c.label),"Total"];
+  const rows=[];
+  data.ministries.forEach(m=>{
+    rows.push(Object.assign({Level:"Ministry",Name:m.name,Total:m.subtotal.total},data.cols.reduce((o,c)=>{o[c.label]=m.subtotal.cells[c.key];return o;},{})));
+    m.offices.forEach(o=>rows.push(Object.assign({Level:"Office",Name:o.name,Total:o.total},data.cols.reduce((a,c)=>{a[c.label]=o.cells[c.key];return a;},{}))));
+  });
+  return toCSV(rows,header);
+}
+/* ===== CONSOLIDATED (matrix) REPORT ENGINE — shared by live render and snapshot replay ===== */
+function consolidatedData(tx,mode,gk){
+  const cols = mode==="summary" ? MONTHS.map(m=>({key:m,label:m.slice(0,3).toUpperCase()}))
+                                : TAX_BUCKETS.map(b=>({key:b,label:b}));
+  const colOf = mode==="summary" ? (t=>monthName(t)) : (t=>bucketOf(t.type));
+  const map={};
+  tx.forEach(t=>{const g=t[gk]||"(blank)";(map[g]=map[g]||{});const ck=colOf(t);map[g][ck]=(map[g][ck]||0)+(+t.amount||0);});
+  const colTot={};cols.forEach(c=>colTot[c.key]=0);let grand=0;
+  const rows=Object.keys(map).sort().map(g=>{
+    const cells={};let rt=0;
+    cols.forEach(c=>{const v=map[g][c.key]||0;cells[c.key]=v;rt+=v;colTot[c.key]+=v;});
+    grand+=rt;
+    return {name:g,full:fullName(g),cells,total:rt};
+  });
+  return {cols,rows,colTot,grand};
+}
+function matrixHTML(gLabel,d){
+  let h=`<table><thead><tr><th class="lname">${escapeHtml(gLabel)}</th>`+d.cols.map(c=>`<th>${escapeHtml(c.label)}</th>`).join("")+`<th>TOTAL</th></tr></thead><tbody>`;
+  d.rows.forEach(r=>{
+    h+=`<tr><td class="lname"><b>${escapeHtml(r.name)}</b> ${r.full&&r.full!==r.name?'<span style="color:#555">- '+escapeHtml(r.full)+'</span>':''}</td>`+
+      d.cols.map(c=>`<td class="num">${fmtN(r.cells[c.key])}</td>`).join("")+`<td class="num"><b>${fmtN(r.total)}</b></td></tr>`;
+  });
+  h+=`<tr class="tot"><td class="lname">GRAND TOTAL</td>`+d.cols.map(c=>`<td class="num">${fmtN(d.colTot[c.key])}</td>`).join("")+`<td class="num">${fmtN(d.grand)}</td></tr></tbody></table>`;
+  return h;
+}
+/* ===== CERTIFICATION ENGINE ===== */
+function amountInWords(n){
+  n=Math.round((Number(n)||0)*100)/100;
+  const pesos=Math.floor(n),cents=Math.round((n-pesos)*100);
+  const ones=["","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"];
+  const tens=["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];
+  function three(num){let s="";if(num>=100){s+=ones[Math.floor(num/100)]+" hundred";num%=100;if(num)s+=" ";}if(num>=20){s+=tens[Math.floor(num/10)];if(num%10)s+="-"+ones[num%10];}else if(num>0)s+=ones[num];return s;}
+  function words(num){if(num===0)return "zero";const scales=["","thousand","million","billion","trillion"];let parts=[],i=0;while(num>0){const c=num%1000;if(c)parts.unshift(three(c)+(scales[i]?" "+scales[i]:""));num=Math.floor(num/1000);i++;}return parts.join(" ");}
+  let w=words(pesos)+" peso"+(pesos===1?"":"s");
+  if(cents>0)w+=" and "+words(cents)+" centavo"+(cents===1?"":"s");
+  return w.toUpperCase();
+}
+function schemeFor(office){const rc=DB.settings.revConfig;const nm=(rc.agencyScheme&&rc.agencyScheme[office])||"standard";return rc.schemes[nm]||rc.schemes.standard;}
+function certClassOf(office,type){const sc=schemeFor(office);return (sc.map&&sc.map[type])||sc.catchAll;}
+function nextCertNo(year,monthIdx){const key=year+"-"+String(monthIdx+1).padStart(2,"0");const last=DB.certSeq[key]||0;return {key,next:key+"-"+String(last+1).padStart(3,"0"),seq:last+1};}
+function certData(office,mon,year){
+  const sc=schemeFor(office);const classes=sc.classes.slice();
+  let rows=DB.transactions.filter(t=>(t.tagging||"Actual")!=="Target"&&t.office===office&&(!year||String(t.year)===String(year))&&(!mon||monthName(t)===mon));
+  rows.sort((a,b)=>(a.date||"")<(b.date||"")?-1:1);
+  const totals={};classes.forEach(c=>totals[c]=0);let grand=0;
+  const lines=rows.map(t=>{const cls=certClassOf(office,t.type);const amt=+t.amount||0;if(totals[cls]==null)totals[cls]=0;totals[cls]+=amt;grand+=amt;return{date:t.date,branch:t.lbp_branch,cls,amount:amt,remarks:t.remarks,type:t.type};});
+  const om=DB.orgmap.find(o=>o.moa===office)||{};
+  const head=DB.settings.agencyHeads[office]||{};
+  return {office,mon,year,classes,lines,totals,grand,orgCode:om.org_code||"",ministry:om.ministry||"",agencyName:head.agencyName||fullName(om.ministry||office)||office};
+}
+function certSigsHTML(sigs){
+  sigs=sigs||DB.settings.signatories||[];
+  return `<div class="cert-sigs">`+sigs.map(s=>
+    `<div class="cert-sig"><div class="role">${escapeHtml(s.role_label)}:</div><div class="nm">${escapeHtml(s.name||"")}</div><div class="ps">${escapeHtml(s.position||"")}</div></div>`).join("")+`</div>`;
+}
+function certHTML(data,certNo,dateStr,opts){
+  opts=opts||{};
+  const head=opts.head||DB.settings.agencyHeads[data.office]||{name:"",title:""};
+  const classes=data.classes;
+  const monIdx=MONTHS.indexOf(data.mon);
+  const period=data.mon?(data.mon+" 1-"+(new Date(Number(data.year),monIdx+1,0).getDate())+", "+data.year):("FY "+data.year);
+  let h=`<div class="cert-doc">`;
+  h+=officialBanner(
+     `<div class="r2">${escapeHtml(head.name||"")}</div>`+
+     `<div class="r1">${escapeHtml(head.title||"")}</div>`+
+     `<div class="r1"><b>${escapeHtml(data.agencyName)}</b></div>`+
+     `<div class="r1">Costa Verde Autonomous Region</div>`+
+     `<div class="r1">Regional Government Center, Puerto Real</div>`,
+     `Certification No. <b>${escapeHtml(certNo)}</b><br>Date: ${escapeHtml(dateStr)}`);
+  h+=`<div class="rpt-title">CERTIFICATION</div>`;
+  h+=`<p style="font-size:12px;text-align:justify;margin:10px 30px">${escapeHtml(opts.body||DB.settings.certText.body)}</p>`;
+  h+=`<div style="font-size:12px;margin:6px 0"><b>Ministry/Office/Agency Information</b><br>Agency Name: ${escapeHtml(data.agencyName)} &nbsp;&nbsp;|&nbsp;&nbsp; Organizational Code: ${escapeHtml(data.orgCode)}</div>`;
+  h+=`<div style="font-size:12px;margin:6px 0"><b>Deposited Collection Information</b> &nbsp;&nbsp;|&nbsp;&nbsp; Period Coverage: ${escapeHtml(period)}</div>`;
+  h+=`<table><thead><tr><th>Date</th><th class="lname">Bank Branch</th>`+classes.map(c=>`<th>${escapeHtml(c)}</th>`).join("")+`<th class="lname">Remarks</th></tr></thead><tbody>`;
+  data.lines.forEach(l=>{
+    h+=`<tr><td>${escapeHtml(l.date)}</td><td class="lname">${escapeHtml(l.branch)}</td>`+
+      classes.map(c=>`<td class="num">${c===l.cls?fmtN(l.amount):""}</td>`).join("")+
+      `<td class="lname">${escapeHtml(l.remarks)}</td></tr>`;
+  });
+  h+=`<tr class="tot"><td colspan="2">Total:</td>`+classes.map(c=>`<td class="num">${fmtN(data.totals[c])}</td>`).join("")+`<td></td></tr>`;
+  h+=`</tbody></table>`;
+  h+=`<div style="font-size:12px;margin-top:10px"><b>SUMMARY:</b></div><table style="width:auto;margin-top:4px">`;
+  classes.forEach(c=>{h+=`<tr><td class="lname">${escapeHtml(c)}</td><td class="num">${fmtN(data.totals[c])}</td></tr>`;});
+  h+=`<tr class="tot"><td class="lname">TOTAL</td><td class="num">${fmtN(data.grand)}</td></tr></table>`;
+  h+=`<div style="font-size:12px;margin-top:10px"><b>AMOUNT IN WORDS:</b> ***${escapeHtml(amountInWords(data.grand))}***</div>`;
+  h+=`<div style="font-size:12px;margin-top:4px"><b>PURPOSE:</b> ${escapeHtml(opts.purpose||DB.settings.certText.purpose)}</div>`;
+  h+=certSigsHTML(opts.sigs);
+  h+=`</div>`;
+  return h;
+}
+function renderReport(){
+  if(SNAPVIEW){renderSnapshotView(SNAPVIEW);return;}
+  const type=$("#rpt_type").value;
+  const ledgerOnly=type==="ledger";
+  const isCert=type==="cert";
+  const detail=$("#rpt_detail")?$("#rpt_detail").value:"consolidated";
+  const showEmpty=!!($("#rpt_empty")&&$("#rpt_empty").checked);
+  ["rpt_min_wrap","rpt_off_wrap","rpt_mon_wrap","rpt_typ_wrap"].forEach(id=>$("#"+id).style.display=ledgerOnly?"":"none");
+  $("#rpt_min_c_wrap").style.display=isCert?"":"none";
+  $("#rpt_agency_wrap").style.display=isCert?"":"none";
+  $("#rpt_cmon_wrap").style.display=isCert?"":"none";
+  $("#rpt_detail_wrap").style.display=(ledgerOnly||isCert)?"none":"";
+  $("#rpt_empty_wrap").style.display=(!ledgerOnly&&!isCert&&detail==="drill")?"":"none";
+  $("#rpt_grp_wrap").style.display=(ledgerOnly||isCert||detail==="drill")?"none":"";
+  $("#rpt_asof").parentElement.style.display="";
+  const gk=$("#rpt_groupby").value; // 'ministry' or 'office'
+  const gLabel=gk==="office"?"Office / Agency":"Ministry";
+  const asof=$("#rpt_asof").value?new Date($("#rpt_asof").value).toLocaleDateString("en-PH",{year:"numeric",month:"long",day:"numeric"}):new Date().toLocaleDateString("en-PH",{year:"numeric",month:"long",day:"numeric"});
+  if(isCert){
+    const office=$("#cert_agency").value;
+    if(!office){$("#rpt_out").innerHTML='<p style="color:#555;padding:20px">Select an agency (office) above to generate its certification.</p>';return;}
+    const mon=$("#cert_month").value;
+    const certNo=mon?nextCertNo(YEAR||String(new Date().getFullYear()),MONTHS.indexOf(mon)).next+" (next — assigned on Issue)":"(assigned on Issue)";
+    $("#rpt_out").innerHTML=certHTML(certData(office,mon,YEAR),certNo,asof);
+    return;
+  }
+  const tx=actualTx();
+  let html=rptHeader();
+  if(type==="summary"){
+    html+=`<div class="rpt-title">Summary of Collection</div><div class="rpt-sub">FY ${YEAR||"All Years"} &nbsp; (Amounts in PHP)</div>`;
+    if(detail==="drill"){html+=nestedReportHTML(nestedReportData(tx,"summary",showEmpty));}
+    else html+=matrixHTML(gLabel,consolidatedData(tx,"summary",gk));
+  }else if(type==="bytype"){
+    html+=`<div class="rpt-title">Collection Report</div><div class="rpt-sub">FY ${YEAR||"All Years"} &nbsp; As of ${asof} &nbsp; (Amounts in PHP)</div>`;
+    if(detail==="drill"){html+=nestedReportHTML(nestedReportData(tx,"bytype",showEmpty));}
+    else html+=matrixHTML(gLabel,consolidatedData(tx,"bytype",gk));
+  }else{ // ledger
+    const fm=$("#rpt_ministry").value,fo=$("#rpt_office").value,fmo=$("#rpt_month").value,ft=$("#rpt_type_filter").value;
+    let rows=tx.filter(t=>(!fm||t.ministry===fm)&&(!fo||t.office===fo)&&(!fmo||monthName(t)===fmo)&&(!ft||t.type===ft));
+    rows.sort((a,b)=>(a.date||"")<(b.date||"")?-1:1);
+    html+=`<div class="rpt-title">Collection Ledger</div><div class="rpt-sub">FY ${YEAR||"All Years"} &nbsp; As of ${asof}</div>`;
+    html+=`<div style="font-size:11px;margin-bottom:8px">`+
+      `Ministry: <b>${escapeHtml(fm||"All")}</b> &nbsp;|&nbsp; Office: <b>${escapeHtml(fo||"All")}</b> &nbsp;|&nbsp; Month: <b>${escapeHtml(fmo||"All")}</b> &nbsp;|&nbsp; Type: <b>${escapeHtml(ft||"All")}</b></div>`;
+    html+=`<table><thead><tr><th>Date</th><th class="lname">Ministry</th><th class="lname">Office</th><th class="lname">Payment Method</th><th class="lname">Bank Branch</th><th class="lname">Type of Collection</th><th>Amount</th></tr></thead><tbody>`;
+    let tot=0;
+    rows.forEach(t=>{tot+=(+t.amount||0);
+      html+=`<tr><td>${escapeHtml(t.date)}</td><td class="lname">${escapeHtml(t.ministry)}</td><td class="lname">${escapeHtml(t.office)}</td>`+
+        `<td class="lname">${escapeHtml(t.payment_method)}</td><td class="lname">${escapeHtml(t.lbp_branch)}</td><td class="lname">${escapeHtml(t.type)}</td><td class="num">${fmtN(t.amount)}</td></tr>`;
+    });
+    html+=`<tr class="tot"><td colspan="6">TOTAL (${rows.length} entries)</td><td class="num">${fmtN(tot)}</td></tr></tbody></table>`;
+  }
+  html+=rptFooter();
+  $("#rpt_out").innerHTML=html;
+}
+function fmtN(n){n=Number(n)||0;return n.toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});}
+$$("#rpt_type,#rpt_asof,#rpt_groupby,#rpt_detail,#rpt_empty,#rpt_ministry,#rpt_office,#rpt_month,#rpt_type_filter,#cert_agency,#cert_month").forEach(el=>el&&(el.onchange=()=>{SNAPVIEW=null;renderReport();}));
+$("#cert_ministry").onchange=()=>{SNAPVIEW=null;refreshCertAgency();renderReport();};
+$("#rpt_print").onclick=()=>window.print();
+$("#rpt_csv").onclick=()=>{
+  const tx=actualTx();const type=$("#rpt_type").value;const gk=$("#rpt_groupby").value;const GL=gk==="office"?"Office":"Ministry";
+  const detail=$("#rpt_detail")?$("#rpt_detail").value:"consolidated";
+  const showEmpty=!!($("#rpt_empty")&&$("#rpt_empty").checked);
+  if(type==="cert"){
+    const office=$("#cert_agency").value;const mon=$("#cert_month").value;const data=certData(office,mon,YEAR);
+    download("certification_"+(office||"agency")+".csv",toCSV(data.lines.map(l=>({date:l.date,branch:l.branch,type:l.type,class:l.cls,amount:l.amount,remarks:l.remarks})),["date","branch","type","class","amount","remarks"]),"text/csv");
+    toast("CSV exported");return;
+  }
+  if((type==="summary"||type==="bytype")&&detail==="drill"){
+    download((type==="summary"?"summary":"by_type")+"_drilldown.csv",nestedCSV(nestedReportData(tx,type,showEmpty)),"text/csv");
+    toast("CSV exported");return;
+  }
+  if(type==="summary"){
+    const mins=uniq(tx.map(t=>t[gk])).sort();
+    const rows=mins.map(m=>{const o={[GL]:m};MONTHS.forEach(mo=>o[mo]=tx.filter(t=>t[gk]===m&&monthName(t)===mo).reduce((s,t)=>s+(+t.amount||0),0));o.Total=MONTHS.reduce((s,mo)=>s+o[mo],0);return o;});
+    download("summary_of_collection.csv",toCSV(rows,[GL,...MONTHS,"Total"]),"text/csv");
+  }else if(type==="bytype"){
+    const mins=uniq(tx.map(t=>t[gk])).sort();
+    const rows=mins.map(m=>{const o={[GL]:m};TAX_BUCKETS.forEach(b=>o[b]=0);tx.filter(t=>t[gk]===m).forEach(t=>o[bucketOf(t.type)]+=(+t.amount||0));o.Total=TAX_BUCKETS.reduce((s,b)=>s+o[b],0);return o;});
+    download("collection_report_by_type.csv",toCSV(rows,[GL,...TAX_BUCKETS,"Total"]),"text/csv");
+  }else{
+    const fm=$("#rpt_ministry").value,fo=$("#rpt_office").value,fmo=$("#rpt_month").value,ft=$("#rpt_type_filter").value;
+    const rows=tx.filter(t=>(!fm||t.ministry===fm)&&(!fo||t.office===fo)&&(!fmo||monthName(t)===fmo)&&(!ft||t.type===ft));
+    download("ledger.csv",toCSV(rows,["date","ministry","office","payment_method","lbp_branch","type","amount"]),"text/csv");
+  }
+  toast("CSV exported");
+};
+
+/* ===== ISSUED REPORTS: audit + snapshot + history (M4) ===== */
+const ISSUED_CAP=50;
+let SNAPVIEW=null;   // when set, the Reports pane shows an as-issued snapshot instead of live data
+function nowTS(){return new Date().toISOString().slice(0,19).replace("T"," ");}
+function pushIssued(snap){
+  DB.issued_reports.unshift(snap);
+  if(DB.issued_reports.length>ISSUED_CAP){DB.issued_reports.length=ISSUED_CAP;toast("Report history full — oldest entry pruned");}
+  save();
+}
+function issueCurrentReport(){
+  if(SNAPVIEW)return toast("Viewing an issued snapshot — go back to live reports first",true);
+  const type=$("#rpt_type").value;
+  const asof=$("#rpt_asof").value||new Date().toISOString().slice(0,10);
+  const asofFmt=new Date(asof).toLocaleDateString("en-PH",{year:"numeric",month:"long",day:"numeric"});
+  if(type==="cert"){
+    const office=$("#cert_agency").value;
+    if(!office)return toast("Select an agency first",true);
+    const mon=$("#cert_month").value;
+    const monIdx=mon?MONTHS.indexOf(mon):new Date(asof).getMonth();
+    const sug=nextCertNo(YEAR||String(new Date().getFullYear()),monIdx);
+    showModal(`<h2>Issue Certification</h2>
+      <p class="muted">Records this certification in the audit log and Report History with a locked snapshot of its exact figures and signatories.</p>
+      <label>Certification No.</label><input id="iss_no" value="${escapeHtml(sug.next)}" style="margin-bottom:10px">
+      <label>Date on document</label><input id="iss_date" type="date" value="${escapeHtml(asof)}" style="margin-bottom:14px">
+      <div class="row"><button class="btn green" id="iss_ok">Issue</button><button class="btn gray" id="iss_cancel">Cancel</button></div>`);
+    $("#iss_cancel").onclick=hideModal;
+    $("#iss_ok").onclick=()=>{
+      const no=$("#iss_no").value.trim()||sug.next;
+      const dt=$("#iss_date").value||asof;
+      const dtFmt=new Date(dt).toLocaleDateString("en-PH",{year:"numeric",month:"long",day:"numeric"});
+      const mm=no.match(/^(\d{4}-\d{2})-(\d+)$/);
+      if(mm)DB.certSeq[mm[1]]=Math.max(DB.certSeq[mm[1]]||0,parseInt(mm[2],10));
+      const d=certData(office,mon,YEAR);
+      const head=DB.settings.agencyHeads[office]||{};
+      pushIssued({id:"ir-"+Date.now(),kind:"cert",cert_no:no,date_str:dtFmt,
+        params:{office,mon,year:YEAR},generated_ts:nowTS(),by:currentUser(),
+        total:d.grand,row_count:d.lines.length,
+        payload:{office:d.office,mon:d.mon,year:d.year,classes:d.classes,
+          lines:d.lines.map(l=>[l.date,l.branch,l.cls,l.amount,l.remarks]),
+          totals:d.totals,grand:d.grand,orgCode:d.orgCode,agencyName:d.agencyName},
+        head:{name:head.name||"",title:head.title||""},
+        sigs:JSON.parse(JSON.stringify(DB.settings.signatories||[])),
+        body:DB.settings.certText.body,purpose:DB.settings.certText.purpose});
+      logAudit("Issued Certification",no+" — "+office+" "+(mon||"FY")+" "+(YEAR||"All")+" "+peso(d.grand));
+      hideModal();renderAll();toast("Certification "+no+" issued & logged");
+    };
+    return;
+  }
+  const gk=$("#rpt_groupby").value,gLabel=gk==="office"?"Office / Agency":"Ministry";
+  const detail=$("#rpt_detail").value,showEmpty=!!($("#rpt_empty")&&$("#rpt_empty").checked);
+  const tx=actualTx();
+  let snap;
+  if(type==="ledger"){
+    const fm=$("#rpt_ministry").value,fo=$("#rpt_office").value,fmo=$("#rpt_month").value,ft=$("#rpt_type_filter").value;
+    const rows=tx.filter(t=>(!fm||t.ministry===fm)&&(!fo||t.office===fo)&&(!fmo||monthName(t)===fmo)&&(!ft||t.type===ft));
+    snap={id:"ir-"+Date.now(),kind:"ledger",params:{fm,fo,fmo,ft,year:YEAR,asof:asofFmt},
+      generated_ts:nowTS(),by:currentUser(),total:rows.reduce((s,t)=>s+(+t.amount||0),0),row_count:rows.length,
+      payload:null,sigs:JSON.parse(JSON.stringify(DB.settings.signatories||[]))};
+  }else{
+    const payload=(detail==="drill")?nestedReportData(tx,type,showEmpty):consolidatedData(tx,type,gk);
+    snap={id:"ir-"+Date.now(),kind:type,params:{gk,gLabel,detail,showEmpty,year:YEAR,asof:asofFmt},
+      generated_ts:nowTS(),by:currentUser(),total:payload.grand,
+      row_count:(detail==="drill")?payload.ministries.length:payload.rows.length,
+      payload,sigs:JSON.parse(JSON.stringify(DB.settings.signatories||[]))};
+  }
+  const title=type==="ledger"?"Ledger":type==="summary"?"Summary of Collection":"Collection Report by Type";
+  showModal(`<h2>Issue Report</h2><p class="muted">Records this ${escapeHtml(title)} in the audit log and Report History with a locked snapshot of its figures.</p>
+    <p>Scope: <b>FY ${escapeHtml(snap.params.year||"All Years")}</b> &nbsp;|&nbsp; Total: <b>${peso(snap.total)}</b> &nbsp;|&nbsp; Rows: ${snap.row_count}</p>
+    <div class="row"><button class="btn green" id="iss_ok">Issue</button><button class="btn gray" id="iss_cancel">Cancel</button></div>`);
+  $("#iss_cancel").onclick=hideModal;
+  $("#iss_ok").onclick=()=>{
+    pushIssued(snap);
+    logAudit("Issued Report",title+" — FY "+(snap.params.year||"All")+" "+peso(snap.total));
+    hideModal();renderAll();toast("Report issued & logged");
+  };
+}
+$("#rpt_issue").onclick=issueCurrentReport;
+// Rebuild a snapshot's document from stored data (never stored HTML) — all fields re-escaped on render.
+function snapshotBodyHTML(snap){
+  if(snap.kind==="cert"){
+    const p=snap.payload;
+    const data={office:p.office,mon:p.mon,year:p.year,classes:p.classes,
+      lines:p.lines.map(a=>({date:a[0],branch:a[1],cls:a[2],amount:a[3],remarks:a[4]})),
+      totals:p.totals,grand:p.grand,orgCode:p.orgCode,agencyName:p.agencyName};
+    return certHTML(data,snap.cert_no,snap.date_str,{head:snap.head,sigs:snap.sigs,body:snap.body,purpose:snap.purpose});
+  }
+  let h=rptHeader();
+  const yr=snap.params.year||"All Years";
+  if(snap.kind==="summary"){
+    h+=`<div class="rpt-title">Summary of Collection</div><div class="rpt-sub">FY ${escapeHtml(yr)} &nbsp; (Amounts in PHP)</div>`;
+    h+=(snap.params.detail==="drill")?nestedReportHTML(snap.payload):matrixHTML(snap.params.gLabel||"Ministry",snap.payload);
+  }else if(snap.kind==="bytype"){
+    h+=`<div class="rpt-title">Collection Report</div><div class="rpt-sub">FY ${escapeHtml(yr)} &nbsp; As of ${escapeHtml(snap.params.asof||"")} &nbsp; (Amounts in PHP)</div>`;
+    h+=(snap.params.detail==="drill")?nestedReportHTML(snap.payload):matrixHTML(snap.params.gLabel||"Ministry",snap.payload);
+  }else{ // ledger — issued totals locked; detail regenerated from current data
+    const f=snap.params;
+    let rows=DB.transactions.filter(t=>(t.tagging||"Actual")!=="Target"&&(!f.year||String(t.year)===String(f.year))&&(!f.fm||t.ministry===f.fm)&&(!f.fo||t.office===f.fo)&&(!f.fmo||monthName(t)===f.fmo)&&(!f.ft||t.type===f.ft));
+    rows.sort((a,b)=>(a.date||"")<(b.date||"")?-1:1);
+    h+=`<div class="rpt-title">Collection Ledger</div><div class="rpt-sub">FY ${escapeHtml(f.year||"All Years")} &nbsp; As of ${escapeHtml(f.asof||"")}</div>`;
+    h+=`<div style="font-size:11px;margin-bottom:8px">Ministry: <b>${escapeHtml(f.fm||"All")}</b> &nbsp;|&nbsp; Office: <b>${escapeHtml(f.fo||"All")}</b> &nbsp;|&nbsp; Month: <b>${escapeHtml(f.fmo||"All")}</b> &nbsp;|&nbsp; Type: <b>${escapeHtml(f.ft||"All")}</b></div>`;
+    h+=`<div style="font-size:11px;margin-bottom:8px"><b>As issued:</b> ${peso(snap.total)} (${snap.row_count} entries). Detail listing regenerated from current data.</div>`;
+    h+=`<table><thead><tr><th>Date</th><th class="lname">Ministry</th><th class="lname">Office</th><th class="lname">Payment Method</th><th class="lname">Bank Branch</th><th class="lname">Type of Collection</th><th>Amount</th></tr></thead><tbody>`;
+    let tot=0;
+    rows.forEach(t=>{tot+=(+t.amount||0);
+      h+=`<tr><td>${escapeHtml(t.date)}</td><td class="lname">${escapeHtml(t.ministry)}</td><td class="lname">${escapeHtml(t.office)}</td><td class="lname">${escapeHtml(t.payment_method)}</td><td class="lname">${escapeHtml(t.lbp_branch)}</td><td class="lname">${escapeHtml(t.type)}</td><td class="num">${fmtN(t.amount)}</td></tr>`;});
+    h+=`<tr class="tot"><td colspan="6">TOTAL (${rows.length} entries)</td><td class="num">${fmtN(tot)}</td></tr></tbody></table>`;
+  }
+  h+=`<div class="rpt-foot"><div>Issued: ${escapeHtml(snap.generated_ts)} &nbsp;|&nbsp; by ${escapeHtml(snap.by)}</div></div>`+certSigsHTML(snap.sigs);
+  return h;
+}
+function renderSnapshotView(snap){
+  const ref=snap.cert_no?("Certification No. "+snap.cert_no):"issued report";
+  const banner=`<div class="no-print" style="background:#fff7e0;border:1px solid #d8b74a;color:#5a4a12;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:12px">`+
+    `<b>AS ISSUED</b> — ${escapeHtml(ref)}, issued ${escapeHtml(snap.generated_ts)} by ${escapeHtml(snap.by)}. Figures are locked to the moment of issuance${snap.kind==="ledger"?" (ledger detail regenerated)":""}. `+
+    `<button class="btn sm gray" id="snap_back" style="margin-left:8px">Back to live reports</button></div>`;
+  $("#rpt_out").innerHTML=banner+snapshotBodyHTML(snap);
+  $("#snap_back").onclick=()=>{SNAPVIEW=null;renderReport();};
+}
+function openSnapshot(snap){
+  SNAPVIEW=snap;
+  $$("nav button").forEach(x=>x.classList.remove("active"));
+  document.querySelector('nav button[data-tab="reports"]').classList.add("active");
+  $$(".tab").forEach(t=>t.classList.remove("active"));$("#tab-reports").classList.add("active");
+  renderReport();window.scrollTo(0,0);
+}
+const EXPORT_CSS=`body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:24px auto;max-width:1100px;background:#fff}
+table{font-size:11px;width:100%;border-collapse:collapse}
+th,td{border:1px solid #888;padding:4px 6px;white-space:nowrap;background:#fff}
+th{background:#e8edf5;text-align:center;font-size:10.5px}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.grp td{background:#f1f4f9;font-weight:700}
+tr.tot td{background:#dfe7f3;font-weight:700}
+.lname{text-align:left;white-space:normal;min-width:200px}
+td.subrow{padding-left:24px;color:#333}
+.rpt-head{text-align:center;line-height:1.4;margin-bottom:6px}
+.rpt-head .r1,.rpt-head .r3{font-size:12px}.rpt-head .r2{font-size:13px;font-weight:600}
+.rpt-banner{position:relative;text-align:center;padding:4px 104px 4px}
+.rpt-banner .emblem{height:30px;margin:0 auto 2px;display:block}
+.rpt-banner .seal-l,.rpt-banner .seal-r{position:absolute;top:2px;height:84px}
+.rpt-banner .seal-l{left:6px}.rpt-banner .seal-r{right:6px}
+.rpt-banner .rpt-cno{position:absolute;right:108px;top:4px;font-size:11px;text-align:right;line-height:1.4}
+.rpt-title{text-align:center;font-weight:700;font-size:15px;margin:14px 0 2px;text-transform:uppercase}
+.rpt-sub{text-align:center;font-size:12px;margin-bottom:14px}
+.rpt-foot{margin-top:22px;font-size:11px;display:flex;justify-content:space-between}
+.cert-sigs{display:flex;gap:22px;margin-top:34px;flex-wrap:wrap}
+.cert-sig{flex:1;min-width:170px;font-size:11px}
+.cert-sig .role{margin-bottom:38px}
+.cert-sig .nm{font-weight:700;border-top:1px solid #111;padding-top:3px;text-transform:uppercase}
+.cert-sig .ps{font-size:10px}
+p{font-size:12px}
+@page{size:landscape;margin:12mm}
+@media print{thead{display:table-header-group}tr,.cert-sigs{page-break-inside:avoid}}`;
+function exportIssuedHTML(snap){
+  const title=snap.cert_no?("Certification "+snap.cert_no):("Issued Report "+snap.generated_ts);
+  const doc='<!DOCTYPE html>\n<html><head><meta charset="UTF-8"><title>'+escapeHtml(title)+'</title><style>'+EXPORT_CSS+'</style></head><body>'+snapshotBodyHTML(snap)+'</body></html>';
+  download((snap.cert_no?("certification_"+snap.cert_no):("issued_report_"+snap.id))+".html",doc,"text/html");
+  toast("Standalone copy exported");
+}
+function renderHistory(){
+  $("#histTbl thead").innerHTML="<tr><th>Issued</th><th>Type</th><th>Reference / Scope</th><th>By</th><th class='num'>Total</th><th>Actions</th></tr>";
+  $("#histTbl tbody").innerHTML=DB.issued_reports.map(s=>{
+    const kind=s.kind==="cert"?"Certification":s.kind==="summary"?"Summary":s.kind==="bytype"?"By Type":"Ledger";
+    const ref=s.cert_no?(s.cert_no+" — "+(s.params.office||"")):("FY "+(s.params.year||"All")+((s.params.detail==="drill")?" (drill-down)":""));
+    return `<tr><td>${escapeHtml(s.generated_ts)}</td><td>${escapeHtml(kind)}</td><td>${escapeHtml(ref)}</td><td>${escapeHtml(s.by)}</td>`+
+      `<td class="num">${peso(s.total)}</td>`+
+      `<td><button class="btn sm" data-hact="view" data-id="${escapeHtml(s.id)}">Open</button> `+
+      `<button class="btn sm gray" data-hact="print" data-id="${escapeHtml(s.id)}">Print</button> `+
+      `<button class="btn sm gray" data-hact="export" data-id="${escapeHtml(s.id)}">Export HTML</button></td></tr>`;
+  }).join("")||'<tr><td colspan="6" class="muted">No issued reports yet. Use "Issue &amp; Log" on the Print Reports tab.</td></tr>';
+  const bytes=JSON.stringify(DB).length;
+  $("#histStats").textContent=DB.issued_reports.length+" issued (cap "+ISSUED_CAP+") | storage ~"+(bytes/1024).toFixed(0)+" KB of ~4,000 KB budget";
+}
+$("#histTbl").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-hact]");if(!b)return;
+  const snap=DB.issued_reports.find(s=>s.id===b.dataset.id);if(!snap)return toast("Snapshot not found",true);
+  if(b.dataset.hact==="view")openSnapshot(snap);
+  else if(b.dataset.hact==="print"){openSnapshot(snap);setTimeout(()=>window.print(),150);}
+  else if(b.dataset.hact==="export")exportIssuedHTML(snap);
+});
+/* ===== LETTERHEAD EDITOR (M5) ===== */
+function renderLetterhead(){
+  const lh=DB.settings.letterhead||{};
+  $("#lh_l1").value=lh.l1||"";$("#lh_l2").value=lh.l2||"";$("#lh_l3").value=lh.l3||"";$("#lh_l4").value=lh.l4||"";
+}
+$$("#lh_l1,#lh_l2,#lh_l3,#lh_l4").forEach(el=>el.oninput=()=>{
+  const lh=DB.settings.letterhead;
+  lh.l1=$("#lh_l1").value;lh.l2=$("#lh_l2").value;lh.l3=$("#lh_l3").value;lh.l4=$("#lh_l4").value;
+  save();
+});
+
+/* ===== RENDER ALL ===== */
+function renderAll(){
+  $("#hdrsub").textContent=DB.transactions.length.toLocaleString()+" records | signed in as "+currentUser();
+  refreshYearSelect();
+  renderDash();renderRecent();renderRecords();renderMinistry();setupRptControls();renderReport();renderAudit();renderSigEditor();renderClassMap();renderAgencyHeads();renderHistory();renderLetterhead();
+}
+refreshDropdowns();
+$("#f_date").value=new Date().toISOString().slice(0,10);
+$("#rpt_asof").value=new Date().toISOString().slice(0,10);
+$("#nc_tyear").value=YEAR||defaultYear();
+renderAll();
+if(!DB.settings.currentUser||!DB.settings.currentUser.name)promptUserName();
+</script>
+</body>
+</html>
