@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Collection Database</title>
+<style>
+:root{--bg:#0f1729;--panel:#16213a;--panel2:#1d2b4a;--line:#2a3a5e;--txt:#e7edf7;--muted:#93a4c4;
+  --accent:#3b82f6;--accent2:#22c55e;--warn:#f59e0b;--red:#ef4444;--chip:#243456;--shadow:0 4px 18px rgba(0,0,0,.35);
+  --headerbg:linear-gradient(90deg,#0c1426,#152244);}
+:root.light{--bg:#eef2f8;--panel:#ffffff;--panel2:#f0f4fa;--line:#d5dce8;--txt:#16233d;--muted:#5a6b88;
+  --accent:#2c5db0;--accent2:#1f9d57;--warn:#b7791f;--red:#dc2626;--chip:#e5ecf6;
+  --shadow:0 1px 3px rgba(20,32,58,.09),0 4px 14px rgba(20,32,58,.06);
+  --headerbg:linear-gradient(90deg,#e8eef8,#d9e3f2);}
+:root.light .pill.ok{color:#15803d}:root.light .pill.mid{color:#b45309}:root.light .pill.low{color:#b91c1c}
+:root.light .tag-actual{color:#15803d}:root.light .tag-target{color:#b45309}
+.ac-menu{position:absolute;left:0;right:0;top:100%;z-index:30;background:var(--panel);border:1px solid var(--line);border-radius:8px;margin-top:4px;max-height:264px;overflow:auto;box-shadow:var(--shadow)}
+.ac-item{padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--line)}
+.ac-item:last-child{border-bottom:none}.ac-item:hover{background:var(--panel2)}
+.ac-item.active{background:var(--panel2)}
+.ac-item .code{font-weight:700}.ac-item .sub{color:var(--muted);font-size:11.5px}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
+header{background:var(--headerbg);padding:14px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50}
+header h1{font-size:17px;margin:0;font-weight:650}
+header .sub{color:var(--muted);font-size:12px}
+nav{display:flex;gap:4px;flex-wrap:wrap;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:51px;z-index:40}
+nav button{background:transparent;border:1px solid transparent;color:var(--muted);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600}
+nav button:hover{background:var(--panel2);color:var(--txt)}
+nav button.active{background:var(--accent);color:#fff}
+main{padding:22px;max-width:1280px;margin:0 auto}
+.tab{display:none}.tab.active{display:block}
+.grid{display:grid;gap:16px}.kpis{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
+.kpi .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+.kpi .val{font-size:22px;font-weight:700;margin-top:6px}
+h2{font-size:15px;margin:0 0 14px;font-weight:650}h3{font-size:13px;color:var(--muted);margin:0 0 10px;text-transform:uppercase}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600}
+input,select,textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:9px 11px;border-radius:8px;font-size:13px;font-family:inherit}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.btn{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:650}
+.btn:hover{filter:brightness(1.1)}.btn.green{background:var(--accent2)}.btn.gray{background:var(--chip);color:var(--txt)}
+.btn.red{background:var(--red)}.btn.sm{padding:6px 12px;font-size:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:600;text-transform:uppercase;font-size:11px;background:var(--panel);cursor:pointer}
+tbody tr:hover{background:var(--panel2)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.tablewrap{overflow:auto;max-height:560px;border-radius:10px;border:1px solid var(--line)}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.bar-track{background:var(--panel2);border-radius:6px;height:9px;overflow:hidden;min-width:80px}.bar-fill{height:100%;border-radius:6px}
+.sbrow{display:grid;grid-template-columns:150px 1fr 110px;gap:10px;align-items:center;font-size:12.5px;margin-bottom:8px}
+.svgwrap{width:100%;overflow:auto}
+.pill{padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600}.pill.ok{background:rgba(34,197,94,.18);color:#4ade80}.pill.mid{background:rgba(245,158,11,.18);color:#fbbf24}.pill.low{background:rgba(239,68,68,.18);color:#f87171}
+.split{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}@media(max-width:900px){.formgrid,.split{grid-template-columns:1fr}}
+.subnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;border-bottom:1px solid var(--line);padding-bottom:12px}
+.subnav button{background:var(--panel2);border:1px solid var(--line);color:var(--muted);padding:7px 15px;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600}
+.subnav button:hover{color:var(--txt)}.subnav button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.setpanel .row input{margin-bottom:0}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--accent2);color:#fff;padding:13px 20px;border-radius:10px;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);transition:.25s;z-index:100;font-weight:600}.toast.show{opacity:1;transform:translateY(0)}.toast.err{background:var(--red)}
+.muted{color:var(--muted)}.hint{color:var(--muted);font-size:11px;font-weight:400}.tag-actual{color:#4ade80}.tag-target{color:#fbbf24}
+/* login */
+#loginBg{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:200}
+#loginCard{width:360px;max-width:92vw}
+/* report paper */
+.report-paper{background:#fff;color:#111;padding:34px 40px;border-radius:8px}.report-paper *{color:#111}
+.rpt-banner{position:relative;text-align:center;padding:4px 104px 4px;min-height:88px}
+.cert-head{text-align:left;font-size:12px;line-height:1.4;margin:2px 0 6px}.cert-head .nm{font-weight:700}.cert-head .ag{font-weight:700}
+.rpt-banner .emblem{height:30px;margin:0 auto 2px;display:block}
+.rpt-banner .seal-l,.rpt-banner .seal-r{position:absolute;top:2px;height:84px}.rpt-banner .seal-l{left:6px}.rpt-banner .seal-r{right:6px}
+.rpt-banner .rpt-cno{position:absolute;right:108px;top:4px;font-size:11px;text-align:right;line-height:1.4}
+.rpt-head{text-align:center;line-height:1.4;margin-bottom:6px}.rpt-head .r1,.rpt-head .r3{font-size:12px}.rpt-head .r2{font-size:13px;font-weight:600}
+.rpt-title{text-align:center;font-weight:700;font-size:15px;margin:14px 0 2px;text-transform:uppercase}.rpt-sub{text-align:center;font-size:12px;margin-bottom:14px}
+.report-paper table{font-size:11px;width:100%;border-collapse:collapse}
+.report-paper th,.report-paper td{border:1px solid #888;padding:4px 6px;white-space:nowrap;background:#fff}
+.report-paper th{background:#e8edf5;text-align:center;font-size:10.5px;text-transform:none;cursor:default}
+.report-paper td.num{text-align:right;font-variant-numeric:tabular-nums}.report-paper tr.grp td{background:#f1f4f9;font-weight:700}.report-paper tr.tot td{background:#dfe7f3;font-weight:700}
+.report-paper .lname{text-align:left;white-space:normal;min-width:200px}.report-paper td.subrow{padding-left:24px;color:#333}
+.cert-sigs{display:flex;gap:22px;margin-top:34px;flex-wrap:wrap}.cert-sig{flex:1;min-width:170px;font-size:11px}
+.cert-sig .role{margin-bottom:38px}.cert-sig .nm{font-weight:700;border-top:1px solid #111;padding-top:3px;text-transform:uppercase}.cert-sig .ps{font-size:10px}
+@media print{body{background:#fff}header,nav,.no-print,.toast{display:none!important}main{padding:0;max-width:none}.tab{display:none!important}#tab-reports.active,#tab-cert.active,#tab-history.active,#tab-requests.active{display:block!important}.report-paper{box-shadow:none;border:none;padding:6px;print-color-adjust:exact;-webkit-print-color-adjust:exact}.report-paper thead{display:table-header-group}.report-paper tr,.cert-sigs,.cert-sig,.rpt-foot{break-inside:avoid}.report-paper tr.sec-break{break-before:page}#tab-cert.active .report-paper table{font-size:9px}#tab-cert.active .report-paper th{white-space:normal}#tab-requests .card:not(.report-paper),#tab-history .card:not(.report-paper){display:none!important}@page{size:A4 portrait;margin:11mm}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginBg">
+  <div class="card" id="loginCard">
+    <h2>Collection Database — Sign in</h2>
+    <form id="loginForm">
+      <label>Username</label><input id="li_user" autocomplete="username" required style="margin-bottom:10px">
+      <label>Password</label><input id="li_pass" type="password" autocomplete="current-password" required style="margin-bottom:14px">
+      <button class="btn green" style="width:100%">Sign in</button>
+      <p class="muted" id="loginErr" style="color:#f87171;margin-bottom:0"></p>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appShell" style="display:none">
+<header>
+  <h1>Collection Database</h1>
+  <span class="sub" id="hdrsub"></span>
+  <span style="margin-left:auto;display:flex;align-items:center;gap:10px">
+    <label style="margin:0">Year</label><select id="globalYear" style="width:auto;padding:6px 10px"></select>
+    <span class="muted" id="whoami"></span>
+    <button class="btn gray sm" id="themeBtn" title="Light / dark mode" style="min-width:36px">🌙</button>
+    <button class="btn gray sm" id="logoutBtn">Log out</button>
+  </span>
+</header>
+<nav id="nav"></nav>
+<main>
+  <section class="tab active" id="tab-dash">
+    <div class="grid kpis" id="kpiRow"></div><div style="height:16px"></div>
+    <div class="split"><div class="card"><h2 id="dashChartTitle">Monthly Collections</h2><div class="svgwrap" id="monthlyChart"></div></div>
+      <div class="card"><h2>By Collection Type</h2><div id="typeBars"></div></div></div><div style="height:16px"></div>
+    <div class="split"><div class="card"><h2>By Payment Method</h2><div id="payBars"></div></div>
+      <div class="card"><h2>Top Offices</h2><div id="officeBars"></div></div></div>
+  </section>
+
+  <section class="tab" id="tab-entry">
+    <div class="card"><h2 id="entryTitle">New Collection Entry</h2>
+      <form id="entryForm"><input type="hidden" id="f_id">
+        <div class="formgrid">
+          <div style="position:relative"><label>Organizational Code <span class="hint">(search &amp; auto-fills)</span></label>
+            <input id="f_org_search" placeholder="Type ministry, office, or code…" autocomplete="off">
+            <input type="hidden" id="f_org_code"><div id="orgResults" class="ac-menu" style="display:none"></div></div>
+          <div style="position:relative"><label>Ministry <span class="hint">(search &amp; auto-fills)</span></label>
+            <input id="f_ministry" placeholder="Type to search ministry…" autocomplete="off"><div id="minResults" class="ac-menu" style="display:none"></div></div>
+          <div style="position:relative"><label>Office / MOA <span class="hint">(search &amp; auto-fills)</span></label>
+            <input id="f_office" placeholder="Type to search office…" autocomplete="off"><div id="offResults" class="ac-menu" style="display:none"></div></div>
+          <div><label>Clearing Account</label><input id="f_clearing" readonly></div>
+          <div><label>Payment Method</label><select id="f_payment_method" required></select></div>
+          <div><label>Bank Branch</label><select id="f_lbp_branch"></select></div>
+          <div><label>Amount (PHP)</label><input id="f_amount" type="number" step="0.01" min="0" required></div>
+          <div><label>Transaction Date</label><input id="f_date" type="date" required></div>
+          <div><label>Type of Collection</label><select id="f_type" required></select></div>
+          <div><label>Tagging</label><select id="f_tagging"><option>Actual</option><option>Target</option></select></div>
+          <div style="grid-column:span 2"><label>Remarks</label><input id="f_remarks" placeholder="Optional"></div>
+        </div>
+        <div style="margin-top:16px" class="row"><button type="submit" class="btn green" id="saveBtn">Add Entry</button>
+          <button type="button" class="btn gray" id="cancelEdit" style="display:none">Cancel Edit</button></div>
+      </form></div><div style="height:16px"></div>
+    <div class="card"><h2>Recent Entries</h2><div class="tablewrap"><table id="recentTbl"><thead></thead><tbody></tbody></table></div></div>
+  </section>
+
+  <section class="tab" id="tab-records">
+    <div class="card"><h2>Records</h2>
+      <div class="filters">
+        <div><label>Search</label><input id="flt_q" placeholder="any text..."></div>
+        <div><label>Ministry</label><select id="flt_ministry"></select></div>
+        <div><label>Office</label><select id="flt_office"></select></div>
+        <div><label>Month</label><select id="flt_month"></select></div>
+        <div><label>Type</label><select id="flt_type"></select></div>
+        <div><label>From</label><input id="flt_from" type="date"></div>
+        <div><label>To</label><input id="flt_to" type="date"></div>
+      </div>
+      <div class="row" style="margin-bottom:12px"><button class="btn gray sm" id="clearFlt">Clear filters</button>
+        <span class="muted" id="recStats" style="margin-left:auto"></span></div>
+      <div class="tablewrap"><table id="recTbl"><thead></thead><tbody></tbody></table></div></div>
+  </section>
+
+  <section class="tab" id="tab-ministry">
+    <div class="card"><h2 id="minTitle">Targets vs Collections (by Ministry)</h2>
+      <div class="tablewrap"><table id="minTbl"><thead></thead><tbody></tbody></table></div></div>
+  </section>
+
+  <section class="tab" id="tab-reports">
+    <div class="card no-print"><h2>Print Reports</h2>
+      <div class="filters">
+        <div><label>Report</label><select id="rpt_type">
+          <option value="summary">Summary of Collection (Ministry x Month)</option>
+          <option value="bytype">Collection Report by Type (CR-MO-TAX)</option>
+          <option value="quarterly">Quarterly Summary (per Collection Type)</option>
+          <option value="official">Collection Report (Official Format)</option>
+          <option value="ledger">Ledger / Detail Listing</option></select></div>
+        <div><label>As of date</label><input id="rpt_asof" type="date"></div>
+        <div id="rpt_grp_wrap"><label>Group by</label><select id="rpt_groupby"><option value="ministry">Ministry</option><option value="office">Office / Agency</option></select></div>
+        <div id="rpt_detail_wrap"><label>Detail level</label><select id="rpt_detail"><option value="consolidated">Consolidated</option><option value="drill">Drill-down (Ministry &rarr; Office)</option></select></div>
+        <div id="rpt_lmin"><label>Ministry (ledger)</label><select id="rpt_ministry"></select></div>
+        <div id="rpt_lmon"><label>Month (ledger)</label><select id="rpt_month"></select></div>
+      </div>
+      <div class="row"><button class="btn" id="rpt_print">Print / Save as PDF</button>
+        <button class="btn gray no-print" id="rpt_xlsx" style="display:none">Export to Excel</button>
+        <button class="btn green" id="rpt_issue">Issue &amp; Log</button></div></div>
+    <div style="height:16px"></div><div class="card report-paper" id="rpt_out"></div>
+  </section>
+
+  <section class="tab" id="tab-cert">
+    <div class="card no-print"><h2>Certification (per Agency)</h2>
+      <div class="filters">
+        <div><label>Ministry</label><select id="c_ministry"></select></div>
+        <div><label>Agency / Sub-Office</label><select id="c_office"></select></div>
+        <div><label>Month</label><select id="c_month"></select></div>
+        <div><label>Date on document</label><input id="c_asof" type="date"></div>
+      </div>
+      <div class="row"><button class="btn" id="c_print">Print / Save as PDF</button>
+        <button class="btn green" id="c_issue">Issue &amp; Log</button></div></div>
+    <div style="height:16px"></div><div class="card report-paper" id="cert_out"></div>
+  </section>
+
+  <section class="tab" id="tab-requests">
+    <div class="card"><h2>Request a Report</h2>
+      <p class="muted">Submit a request; the Treasury Office reviews and issues it. The finished document appears under "My Requests" — you receive only the report, not the database.</p>
+      <div class="formgrid">
+        <div><label>Report</label><select id="rq_kind"><option value="cert">Certification (per Agency)</option><option value="summary">Summary of Collection</option><option value="bytype">Collection Report by Type</option><option value="quarterly">Quarterly Summary</option><option value="official">Collection Report (Official Format)</option><option value="ledger">Ledger / Detail</option></select></div>
+        <div id="rq_min_wrap"><label>Ministry</label><select id="rq_ministry"></select></div>
+        <div id="rq_off_wrap"><label>Agency / Sub-Office</label><select id="rq_office"></select></div>
+        <div id="rq_mon_wrap"><label>Month</label><select id="rq_month"></select></div>
+        <div><label>Year</label><select id="rq_year"></select></div>
+        <div style="grid-column:span 2"><label>Purpose / note</label><input id="rq_note" placeholder="e.g. For submission to COA"></div>
+      </div>
+      <div style="margin-top:12px"><button class="btn green" id="rq_submit">Submit request</button></div>
+    </div>
+    <div style="height:16px"></div>
+    <div class="card"><h2>My Requests</h2><div class="tablewrap"><table id="myReqTbl"><thead></thead><tbody></tbody></table></div></div>
+    <div style="height:16px"></div>
+    <div class="card" id="queueCard" style="display:none"><h2>Pending Requests to Fulfill</h2><div class="tablewrap"><table id="queueTbl"><thead></thead><tbody></tbody></table></div></div>
+    <div style="height:16px"></div>
+    <div class="card report-paper" id="req_out" style="display:none"></div>
+  </section>
+
+  <section class="tab" id="tab-history">
+    <div class="card"><h2>Report History <span class="hint">(figures locked as issued)</span></h2>
+      <div class="tablewrap"><table id="histTbl"><thead></thead><tbody></tbody></table></div></div>
+    <div style="height:16px"></div><div class="card report-paper" id="hist_out" style="display:none"></div>
+  </section>
+
+  <section class="tab" id="tab-audit">
+    <div class="card"><h2>Audit Log</h2><div class="tablewrap"><table id="auditTbl"><thead></thead><tbody></tbody></table></div></div>
+  </section>
+
+  <section class="tab" id="tab-admin">
+    <div class="split">
+      <div class="card"><h2>Users</h2>
+        <div class="formgrid" style="grid-template-columns:1fr 1fr">
+          <div><label>Username</label><input id="u_username"></div><div><label>Name</label><input id="u_name"></div>
+          <div><label>Password</label><input id="u_pass" type="password"></div>
+          <div><label>Role</label><select id="u_role"><option>encoder</option><option>certifier</option><option>viewer</option><option>admin</option></select></div>
+        </div>
+        <div style="margin-top:10px"><button class="btn green sm" id="u_create">Create user</button></div>
+        <div style="height:12px"></div><div class="tablewrap"><table id="usersTbl"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card"><h2>Ministry Targets</h2>
+        <div class="row"><select id="t_min" style="max-width:160px"></select><input id="t_year" type="number" placeholder="Year" style="max-width:90px">
+          <input id="t_val" type="number" placeholder="Target amount" style="max-width:180px"><button class="btn green sm" id="t_save">Save</button></div>
+        <p class="hint" style="margin-top:12px">Signatories, agency heads, the revenue-class mapping and the letterhead are now editable below in <b>Officials &amp; Certification Settings</b>.</p>
+        <div style="height:14px"></div><h3>Data</h3>
+        <a class="btn gray sm" href="/api/export.xlsx">Export all data to Excel</a>
+        <p class="hint" style="margin-top:8px">Downloads a Database + Source workbook (re-importable with <code>import_xlsx.py</code>).</p>
+      </div>
+    </div>
+
+    <div style="height:16px"></div>
+    <div class="card">
+      <h2>Officials &amp; Certification Settings</h2>
+      <p class="hint" style="margin-bottom:14px">Edit the names, signatories, letterhead and revenue-class mapping printed on certifications and reports. Changes apply to <b>new</b> documents right away; documents already issued keep their original wording (see Report History).</p>
+      <div class="subnav" id="setSub">
+        <button data-set="sigs" class="active" type="button">Signatories</button>
+        <button data-set="heads" type="button">Agency Heads</button>
+        <button data-set="cmap" type="button">Revenue-Class Mapping</button>
+        <button data-set="groups" type="button">Certification Groups</button>
+        <button data-set="org" type="button">Org Codes</button>
+        <button data-set="lh" type="button">Letterhead &amp; Text</button>
+      </div>
+
+      <div class="setpanel" id="set-sigs">
+        <p class="hint" style="margin-bottom:10px">These names sign every certification and report, in the order shown. Remove a row to drop a signatory.</p>
+        <div id="sigRows"></div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn gray sm" id="sig_add" type="button">+ Add signatory</button>
+          <button class="btn green sm" id="sig_save" type="button">Save signatories</button>
+        </div>
+      </div>
+
+      <div class="setpanel" id="set-heads" style="display:none">
+        <p class="hint" id="heads_missing" style="margin-bottom:10px"></p>
+        <div class="row" style="margin-bottom:12px">
+          <input id="heads_filter" placeholder="Filter by office or agency name..." style="max-width:280px">
+          <label style="margin:0;display:flex;align-items:center;gap:6px;font-weight:600"><input type="checkbox" id="heads_onlyblank" style="width:auto;margin:0">Only agencies without a head</label>
+        </div>
+        <div class="tablewrap"><table id="headsTbl"><thead></thead><tbody></tbody></table></div>
+        <p class="hint" style="margin-top:8px">Edit a row, then click <b>Save</b> on that row. The office code (left) is fixed and matches the certification data.</p>
+      </div>
+
+      <div class="setpanel" id="set-cmap" style="display:none">
+        <p class="hint" style="margin-bottom:10px">Which certification revenue-class each collection type totals into (standard scheme). Changes save immediately when you pick a new class. Airport-scheme mapping is set in the seed file.</p>
+        <div class="row" style="margin-bottom:14px;align-items:flex-end">
+          <div><label>Add a new collection type</label><input id="ct_name" placeholder="e.g. Registration Fee" style="min-width:220px"></div>
+          <div><label>Revenue-class</label><select id="ct_class" style="min-width:200px"></select></div>
+          <button class="btn green sm" id="ct_add" type="button">+ Add type</button>
+        </div>
+        <div class="tablewrap"><table id="cmapTbl"><thead></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="setpanel" id="set-groups" style="display:none">
+        <p class="hint" style="margin-bottom:10px">A group merges several sub-offices into <b>one</b> certification (e.g. MOED + MOED BE + MOED HE + MOED MA). Data entry and internal reports keep the sub-offices separate — only the certification is consolidated. The group appears in the Certification agency picker under its ministry; already-issued documents are never affected.</p>
+        <div class="tablewrap"><table id="grpTbl"><thead></thead><tbody></tbody></table></div>
+        <div style="height:14px"></div><h3 id="grp_form_title">Add a group</h3>
+        <div class="formgrid" style="grid-template-columns:1fr 1fr">
+          <div><label>Group name (as shown in the Certification picker)</label><input id="g_name" placeholder='e.g. MOED (Consolidated)'></div>
+          <div><label>Appears under Ministry</label><select id="g_ministry"></select></div>
+          <div><label>Org code printed on the certificate (blank = head office's code)</label><input id="g_org" placeholder="e.g. MOED2022"></div>
+          <div><label>Head &amp; agency name taken from (a member office)</label><select id="g_head"></select></div>
+          <div style="grid-column:span 2"><label>Member offices — tick every sub-office to merge</label>
+            <input id="g_filter" placeholder="Filter offices…" style="max-width:260px;margin-bottom:6px">
+            <div id="g_members" style="max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px"></div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn green sm" id="g_save" type="button">Save group</button>
+          <button class="btn gray sm" id="g_new" type="button">Clear / New group</button>
+        </div>
+      </div>
+
+      <div class="setpanel" id="set-lh" style="display:none">
+        <div class="formgrid" style="grid-template-columns:1fr 1fr">
+          <div style="grid-column:span 2"><label>Letterhead line 1</label><input id="lh_l1"></div>
+          <div style="grid-column:span 2"><label>Letterhead line 2</label><input id="lh_l2"></div>
+          <div style="grid-column:span 2"><label>Letterhead line 3</label><input id="lh_l3"></div>
+          <div style="grid-column:span 2"><label>Letterhead line 4</label><input id="lh_l4"></div>
+          <div style="grid-column:span 2"><label>Certification body text</label><textarea id="lh_body" rows="3"></textarea></div>
+          <div style="grid-column:span 2"><label>Certification purpose line</label><input id="lh_purpose"></div>
+        </div>
+        <div style="margin-top:12px"><button class="btn green sm" id="lh_save" type="button">Save letterhead &amp; text</button></div>
+      </div>
+
+      <div class="setpanel" id="set-org" style="display:none">
+        <p class="hint" id="org_missing" style="margin-bottom:10px"></p>
+        <div class="row" style="margin-bottom:14px;align-items:flex-end">
+          <div><label>New org code</label><input id="org_new_code" placeholder="e.g. 12-345" style="min-width:120px"></div>
+          <div><label>Office name</label><input id="org_new_office" placeholder="e.g. Regional Office X" style="min-width:200px"></div>
+          <div><label>Ministry</label><input id="org_new_ministry" list="ministryList" placeholder="(optional)" style="min-width:180px"></div>
+          <div><label>Clearing</label><input id="org_new_clearing" placeholder="(optional)" style="min-width:120px"></div>
+          <button class="btn green sm" id="org_add" type="button">+ Add new office</button>
+        </div>
+        <div class="row" style="margin-bottom:12px">
+          <input id="org_filter" placeholder="Filter by code, office, or ministry…" style="max-width:300px">
+          <label style="margin:0;display:flex;align-items:center;gap:6px;font-weight:600"><input type="checkbox" id="org_onlyblank" style="width:auto;margin:0">Only codes needing review</label>
+        </div>
+        <div class="tablewrap"><table id="orgTbl"><thead></thead><tbody></tbody></table></div>
+        <p class="hint" style="margin-top:8px">Set an office's Ministry (type or pick from the list), then click <b>Save</b> on that row. Saving also re-groups that office's existing entries under the new ministry. The org code is fixed.</p>
+        <datalist id="ministryList"></datalist>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+let ME=null,META=null,YEAR="",ORG={},SNAP=null;
+function toast(m,err){const t=$("#toast");t.textContent=m;t.className="toast show"+(err?" err":"");setTimeout(()=>t.className="toast",2400);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function peso(n){n=Number(n);if(isNaN(n))return "PHP 0.00";return "PHP "+n.toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtN(n){n=Number(n)||0;return n.toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function pesoShort(n){n=Number(n)||0;const a=Math.abs(n);if(a>=1e9)return(n/1e9).toFixed(2)+"B";if(a>=1e6)return(n/1e6).toFixed(2)+"M";if(a>=1e3)return(n/1e3).toFixed(1)+"K";return n.toFixed(0);}
+async function api(path,method="GET",body){
+  const opt={method,headers:{},credentials:"same-origin"};
+  if(body!==undefined){opt.headers["Content-Type"]="application/json";opt.body=JSON.stringify(body);}
+  const r=await fetch("/api"+path,opt);let d=null;try{d=await r.json();}catch(e){}
+  if(!r.ok)throw{status:r.status,error:(d&&d.error)||("HTTP "+r.status)};return d;
+}
+function role(){return ME?ME.role:"";}
+function can(w){const r=role();if(r==="admin")return true;if(w==="entry")return r==="encoder";
+  if(w==="issue"||w==="reports"||w==="cert"||w==="history")return r==="certifier";
+  if(w==="delete"||w==="admin")return false;return true;}
+
+/* ---- theme (light / dark) ---- */
+function applyTheme(t){document.documentElement.classList.toggle("light",t==="light");const b=$("#themeBtn");if(b)b.textContent=t==="light"?"☀️":"🌙";}
+$("#themeBtn").onclick=()=>{const t=document.documentElement.classList.contains("light")?"dark":"light";localStorage.setItem("cdb_theme",t);applyTheme(t);};
+applyTheme(localStorage.getItem("cdb_theme")||"dark");
+
+/* ---- boot / auth ---- */
+$("#loginForm").onsubmit=async e=>{e.preventDefault();try{await api("/login","POST",{username:$("#li_user").value,password:$("#li_pass").value});location.reload();}catch(err){$("#loginErr").textContent=err.error||"Login failed";}};
+$("#logoutBtn").onclick=async()=>{await api("/logout","POST",{});location.reload();};
+async function boot(){
+  try{const d=await api("/me");ME=d.user;}catch(e){ME=null;}
+  if(!ME){$("#loginBg").style.display="flex";return;}
+  $("#loginBg").style.display="none";$("#appShell").style.display="block";
+  META=await api("/meta");
+  (META.orgmap||[]).forEach(o=>ORG[o.org_code]=o);
+  YEAR=(META.years&&META.years.length)?META.years[META.years.length-1]:String(new Date().getFullYear());
+  $("#whoami").textContent=ME.name+" ("+ME.role+")";
+  buildNav();fillControls();
+  ["#f_date","#rpt_asof","#c_asof"].forEach(id=>$(id).value=new Date().toISOString().slice(0,10));
+  show("dash");
+}
+function buildNav(){
+  const tabs=[["dash","Dashboard",1],["entry","Data Entry",can("entry")],["records","Records",1],["ministry","Targets vs Collections",1],
+    ["reports","Print Reports",can("reports")],["cert","Certification",can("cert")],["requests","Requests",1],["history","Report History",can("history")],["audit","Audit Log",1],["admin","Admin",role()==="admin"]];
+  $("#nav").innerHTML=tabs.filter(t=>t[2]).map(t=>`<button data-tab="${t[0]}">${t[1]}</button>`).join("");
+  $$("#nav button").forEach(b=>b.onclick=()=>show(b.dataset.tab));
+  if(!can("issue")){$("#rpt_issue").style.display="none";$("#c_issue").style.display="none";}
+}
+function fillSel(el,items,opts){opts=opts||{};const cur=el.value;el.innerHTML=(opts.all?'<option value="">All</option>':opts.blank?'<option value="">- select -</option>':'')+items.map(i=>`<option>${esc(i)}</option>`).join("");if(opts.keep&&items.includes(cur))el.value=cur;}
+function fillControls(){
+  const L=META.lists||{};
+  fillSel($("#f_org_code"),(L.org_codes&&L.org_codes.length)?L.org_codes:(META.orgmap||[]).map(o=>o.org_code),{blank:true});
+  fillSel($("#f_payment_method"),L.payment_methods||[],{blank:true});
+  fillSel($("#f_lbp_branch"),L.lbp_branches||[],{blank:true});
+  fillSel($("#f_type"),(META.collection_types||[]).map(t=>t.name),{blank:true});
+  fillSel($("#flt_ministry"),META.ministries||[],{all:true});
+  fillSel($("#flt_office"),uniqOffices(),{all:true});
+  fillSel($("#flt_month"),MONTHS,{all:true});
+  fillSel($("#flt_type"),(META.collection_types||[]).map(t=>t.name),{all:true});
+  fillSel($("#rpt_ministry"),META.ministries||[],{all:true});
+  fillSel($("#rpt_month"),MONTHS,{all:true});
+  fillSel($("#c_ministry"),META.ministries||[],{blank:true});
+  fillSel($("#c_month"),MONTHS,{all:true});
+  fillSel($("#t_min"),META.ministries||[],{});
+  $("#t_year").value=YEAR;
+  fillSel($("#rq_ministry"),META.ministries||[],{blank:true});
+  fillSel($("#rq_month"),MONTHS,{all:true});
+  $("#rq_year").innerHTML=(META.years||[]).map(y=>`<option>${esc(y)}</option>`).join("");$("#rq_year").value=YEAR;
+  rqToggle();
+  $("#globalYear").innerHTML='<option value="">All Years</option>'+(META.years||[]).map(y=>`<option>${esc(y)}</option>`).join("");
+  $("#globalYear").value=YEAR;
+}
+function uniqOffices(){return [...new Set((META.orgmap||[]).map(o=>o.moa).filter(Boolean))].sort();}
+$("#globalYear").onchange=function(){YEAR=this.value;refresh();};
+
+let CURTAB="dash";
+function show(t){CURTAB=t;$$("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));$$(".tab").forEach(s=>s.classList.toggle("active",s.id==="tab-"+t));refresh();}
+function refresh(){({dash:renderDash,entry:renderEntry,records:renderRecords,ministry:renderMinistry,reports:renderReport,cert:renderCert,requests:renderRequests,history:renderHistory,audit:renderAudit,admin:renderAdmin}[CURTAB]||(()=>{}))();}
+
+/* ---- dashboard ---- */
+function barChartSVG(labels,vals){const W=Math.max(520,labels.length*46),H=240,pad=34,bw=W/labels.length*0.6,max=Math.max(1,...vals);let bars="";
+  labels.forEach((l,i)=>{const x=i*(W/labels.length)+(W/labels.length-bw)/2,h=(vals[i]/max)*(H-pad*2),y=H-pad-h;
+    bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="3" fill="url(#g)"><title>${esc(l)}: ${peso(vals[i])}</title></rect>`;
+    bars+=`<text x="${x+bw/2}" y="${H-pad+14}" font-size="10" fill="#93a4c4" text-anchor="middle">${esc(l)}</text>`;
+    if(vals[i]>0)bars+=`<text x="${x+bw/2}" y="${y-4}" font-size="9" fill="#cbd5e1" text-anchor="middle">${pesoShort(vals[i])}</text>`;});
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:${W}px"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#1d4ed8"/></linearGradient></defs><line x1="${pad}" y1="${H-pad}" x2="${W}" y2="${H-pad}" stroke="#2a3a5e"/>${bars}</svg>`;}
+function bars(entries){const max=Math.max(1,...entries.map(e=>e.v));return entries.map(e=>`<div class="sbrow"><div title="${esc(e.k)}" style="overflow:hidden;text-overflow:ellipsis">${esc(e.k)}</div><div class="bar-track"><div class="bar-fill" style="width:${(e.v/max*100).toFixed(1)}%;background:linear-gradient(90deg,#3b82f6,#22c55e)"></div></div><div style="text-align:right" class="muted">${pesoShort(e.v)}</div></div>`).join("")||'<span class="muted">No data</span>';}
+async function renderDash(){const d=await api("/dashboard?year="+encodeURIComponent(YEAR));
+  $("#hdrsub").textContent=d.count.toLocaleString()+" records";
+  const kpis=[["Total Collected",peso(d.total)],[(YEAR||"All")+" Target",peso(d.target)],["% Accomplishment",d.pct.toFixed(1)+"%"],["Transactions",d.count.toLocaleString()],["Ministries Active",d.ministries_active]];
+  $("#kpiRow").innerHTML=kpis.map(k=>`<div class="card kpi"><div class="label">${k[0]}</div><div class="val">${k[1]}</div></div>`).join("");
+  $("#dashChartTitle").textContent="Monthly Collections ("+(YEAR||"All Years")+")";
+  $("#monthlyChart").innerHTML=barChartSVG(MONTHS.map(m=>m.slice(0,3)),d.monthly);
+  $("#typeBars").innerHTML=bars(d.by_type);$("#payBars").innerHTML=bars(d.by_payment);$("#officeBars").innerHTML=bars(d.top_offices);}
+
+/* ---- entry ---- */
+/* org-code search combobox */
+function orgFill(code){const o=ORG[code]||{};$("#f_ministry").value=o.ministry||"";$("#f_office").value=o.moa||"";$("#f_clearing").value=o.clearing||"";}
+function selectOrg(code){$("#f_org_code").value=code||"";const o=ORG[code]||{};$("#f_org_search").value=code?(code+(o.moa?"  —  "+o.moa:"")):"";orgFill(code);["#orgResults","#minResults","#offResults"].forEach(m=>$(m).style.display="none");}
+function orgSearch(){const q=$("#f_org_search").value.trim().toLowerCase();const box=$("#orgResults");
+  if(!q){box.style.display="none";$("#f_org_code").value="";orgFill("");return;}
+  const mn=META.ministry_names||{},an=META.agency_names||{};
+  const hits=Object.values(ORG).filter(o=>((o.org_code||"")+" "+(o.ministry||"")+" "+(mn[o.ministry]||"")+" "+(o.moa||"")+" "+(an[o.moa]||"")).toLowerCase().includes(q)).slice(0,25);
+  box.innerHTML=hits.length?hits.map(o=>`<div class="ac-item" data-code="${esc(o.org_code)}"><span class="code">${esc(o.org_code)}</span> <span class="sub">${esc(o.moa||"")}${o.ministry?" · "+esc(o.ministry):""}</span></div>`).join(""):'<div class="ac-item muted">No match</div>';
+  box.style.display="block";}
+$("#f_org_search").addEventListener("input",orgSearch);
+$("#f_org_search").addEventListener("focus",orgSearch);
+$("#orgResults").addEventListener("click",e=>{const it=e.target.closest(".ac-item[data-code]");if(it)selectOrg(it.dataset.code);});
+document.addEventListener("click",e=>{[["#f_org_search","#orgResults"],["#f_ministry","#minResults"],["#f_office","#offResults"]].forEach(p=>{if(!e.target.closest(p[0])&&!e.target.closest(p[1]))$(p[1]).style.display="none";});});
+/* ministry search combobox — picking a ministry narrows the office list (or auto-fills if it has one office) */
+function ministrySearch(){const q=$("#f_ministry").value.trim().toLowerCase();const box=$("#minResults");const mn=META.ministry_names||{};
+  const all=[...new Set(Object.values(ORG).map(o=>o.ministry).filter(Boolean))].sort();
+  const hits=q?all.filter(m=>(m+" "+(mn[m]||"")).toLowerCase().includes(q)):all;
+  box.innerHTML=hits.length?hits.map(m=>`<div class="ac-item" data-min="${esc(m)}"><span class="code">${esc(m)}</span> <span class="sub">${esc(mn[m]||"")}</span></div>`).join(""):'<div class="ac-item muted">No match</div>';
+  box.style.display="block";}
+function selectMinistry(m){$("#minResults").style.display="none";
+  const offices=Object.values(ORG).filter(o=>o.ministry===m);
+  if(offices.length===1){selectOrg(offices[0].org_code);return;}
+  $("#f_ministry").value=m;$("#f_org_code").value="";$("#f_org_search").value="";$("#f_office").value="";$("#f_clearing").value="";
+  $("#f_office").focus();officeSearch();}
+/* office search combobox — each office maps to one org code, so picking one fills everything */
+function officeSearch(){const q=$("#f_office").value.trim().toLowerCase();const box=$("#offResults");const an=META.agency_names||{};
+  const min=$("#f_ministry").value.trim();
+  let pool=Object.values(ORG);if(min&&pool.some(o=>o.ministry===min))pool=pool.filter(o=>o.ministry===min);
+  const hits=q?pool.filter(o=>((o.moa||"")+" "+(an[o.moa]||"")+" "+(o.org_code||"")).toLowerCase().includes(q)):pool;
+  box.innerHTML=hits.length?hits.map(o=>`<div class="ac-item" data-code="${esc(o.org_code)}"><span class="code">${esc(o.moa||"")}</span> <span class="sub">${esc(o.org_code)}${o.ministry?" · "+esc(o.ministry):""}</span></div>`).join(""):'<div class="ac-item muted">No match</div>';
+  box.style.display="block";}
+$("#f_ministry").addEventListener("input",()=>{$("#f_org_code").value="";$("#f_org_search").value="";$("#f_office").value="";$("#f_clearing").value="";ministrySearch();});
+$("#f_ministry").addEventListener("focus",ministrySearch);
+$("#minResults").addEventListener("click",e=>{e.stopPropagation();const it=e.target.closest(".ac-item[data-min]");if(it)selectMinistry(it.dataset.min);});
+$("#f_office").addEventListener("input",()=>{$("#f_org_code").value="";$("#f_org_search").value="";$("#f_clearing").value="";officeSearch();});
+$("#f_office").addEventListener("focus",officeSearch);
+$("#offResults").addEventListener("click",e=>{const it=e.target.closest(".ac-item[data-code]");if(it)selectOrg(it.dataset.code);});
+/* keyboard nav: Down/Up highlights a match, Tab/Enter accepts the highlighted (or top) match */
+function wireComboKeys(input,box,itemSel,onPick){
+  let idx=-1;
+  const items=()=>[...box.querySelectorAll(itemSel)];
+  function setActive(i){const it=items();if(!it.length){idx=-1;return;}
+    idx=((i%it.length)+it.length)%it.length;
+    it.forEach((el,j)=>el.classList.toggle("active",j===idx));
+    it[idx].scrollIntoView({block:"nearest"});}
+  new MutationObserver(()=>setActive(0)).observe(box,{childList:true});
+  input.addEventListener("keydown",e=>{
+    if(box.style.display==="none")return;
+    const it=items();if(!it.length)return;
+    if(e.key==="ArrowDown"){e.preventDefault();setActive(idx+1);}
+    else if(e.key==="ArrowUp"){e.preventDefault();setActive(idx-1);}
+    else if(e.key==="Enter"){e.preventDefault();onPick(it[idx>-1?idx:0]);}
+    else if(e.key==="Tab"){onPick(it[idx>-1?idx:0]);}
+    else if(e.key==="Escape"){box.style.display="none";}
+  });
+}
+wireComboKeys($("#f_org_search"),$("#orgResults"),".ac-item[data-code]",el=>selectOrg(el.dataset.code));
+wireComboKeys($("#f_ministry"),$("#minResults"),".ac-item[data-min]",el=>selectMinistry(el.dataset.min));
+wireComboKeys($("#f_office"),$("#offResults"),".ac-item[data-code]",el=>selectOrg(el.dataset.code));
+function resetForm(){$("#entryForm").reset();$("#f_id").value="";$("#f_org_code").value="";$("#f_org_search").value="";["#orgResults","#minResults","#offResults"].forEach(m=>$(m).style.display="none");$("#f_ministry").value="";$("#f_office").value="";$("#f_clearing").value="";$("#entryTitle").textContent="New Collection Entry";$("#saveBtn").textContent="Add Entry";$("#cancelEdit").style.display="none";$("#f_date").value=new Date().toISOString().slice(0,10);}
+$("#cancelEdit").onclick=resetForm;
+$("#entryForm").onsubmit=async function(e){e.preventDefault();
+  if(!$("#f_org_code").value)return toast("Please choose an Organizational Code from the search list",true);
+  const rec={org_code:$("#f_org_code").value,payment_method:$("#f_payment_method").value,lbp_branch:$("#f_lbp_branch").value,amount:$("#f_amount").value,date:$("#f_date").value,type:$("#f_type").value,tagging:$("#f_tagging").value,remarks:$("#f_remarks").value};
+  const id=$("#f_id").value;
+  try{if(id){await api("/transactions/"+id,"PUT",rec);toast("Entry updated");}else{await api("/transactions","POST",rec);toast("Entry added");}resetForm();renderEntry();}catch(err){toast(err.error||"Save failed",true);}};
+async function renderEntry(){const d=await api("/transactions?limit=40&year="+encodeURIComponent(YEAR));
+  const cols=["date","org_code","ministry","office","type","amount","tagging"];
+  $("#recentTbl thead").innerHTML="<tr>"+cols.map(c=>`<th>${c.replace("_"," ")}</th>`).join("")+"<th>Actions</th></tr>";
+  $("#recentTbl tbody").innerHTML=d.rows.map(t=>"<tr>"+`<td>${esc(t.txn_date)}</td><td>${esc(t.org_code)}</td><td>${esc(t.ministry)}</td><td>${esc(t.office)}</td><td>${esc(t.type)}</td><td class="num">${peso(t.amount)}</td><td><span class="${t.tagging==='Target'?'tag-target':'tag-actual'}">${esc(t.tagging)}</span></td>`+
+    `<td><button class="btn sm gray" data-act="edit" data-id="${esc(t.id)}">Edit</button> ${can("delete")?`<button class="btn sm red" data-act="del" data-id="${esc(t.id)}">Del</button>`:""}</td></tr>`).join("");}
+$("#recentTbl").addEventListener("click",async e=>{const b=e.target.closest("button[data-act]");if(!b)return;
+  if(b.dataset.act==="edit"){editEntry(b.dataset.id);}else if(b.dataset.act==="del"){if(confirm("Delete this entry?")){try{await api("/transactions/"+b.dataset.id,"DELETE");toast("Deleted");renderEntry();}catch(err){toast(err.error,true);}}}});
+async function editEntry(id){let t;try{t=await api("/transactions/"+encodeURIComponent(id));}catch(e){t=null;}if(!t)return toast("Could not load that entry",true);
+  show("entry");$("#f_id").value=t.id;selectOrg(t.org_code);$("#f_payment_method").value=t.payment_method||"";$("#f_lbp_branch").value=t.lbp_branch||"";$("#f_amount").value=t.amount;$("#f_date").value=t.txn_date||"";$("#f_type").value=t.type||"";$("#f_tagging").value=t.tagging||"Actual";$("#f_remarks").value=t.remarks||"";
+  $("#entryTitle").textContent="Edit Entry";$("#saveBtn").textContent="Save Changes";$("#cancelEdit").style.display="";window.scrollTo(0,0);}
+
+/* ---- records ---- */
+function recFilters(){return {q:$("#flt_q").value,ministry:$("#flt_ministry").value,office:$("#flt_office").value,month:$("#flt_month").value,type:$("#flt_type").value,from:$("#flt_from").value,to:$("#flt_to").value,year:YEAR};}
+async function renderRecords(){const f=recFilters();const qs=Object.entries(f).filter(([k,v])=>v).map(([k,v])=>k+"="+encodeURIComponent(v)).join("&");
+  const d=await api("/transactions?limit=500&"+qs);
+  const cols=[["txn_date","Date"],["org_code","Org Code"],["ministry","Ministry"],["office","Office"],["payment_method","Payment"],["lbp_branch","Branch"],["type","Type"],["tagging","Tag"],["amount","Amount"]];
+  $("#recTbl thead").innerHTML="<tr>"+cols.map(c=>`<th class="${c[0]==='amount'?'num':''}">${c[1]}</th>`).join("")+"</tr>";
+  $("#recStats").textContent=`${d.count.toLocaleString()} records | ${peso(d.total)}`;
+  $("#recTbl tbody").innerHTML=d.rows.map(t=>"<tr>"+`<td>${esc(t.txn_date)}</td><td>${esc(t.org_code)}</td><td>${esc(t.ministry)}</td><td>${esc(t.office)}</td><td>${esc(t.payment_method)}</td><td>${esc(t.lbp_branch)}</td><td>${esc(t.type)}</td><td><span class="${t.tagging==='Target'?'tag-target':'tag-actual'}">${esc(t.tagging)}</span></td><td class="num">${peso(t.amount)}</td></tr>`).join("")+(d.count>d.rows.length?`<tr><td colspan="9" class="muted">Showing ${d.rows.length} of ${d.count}. Refine filters.</td></tr>`:"");}
+$$("#tab-records input,#tab-records select").forEach(el=>el.oninput=renderRecords);
+$("#clearFlt").onclick=()=>{$$("#tab-records input,#tab-records select").forEach(el=>el.value="");renderRecords();};
+
+/* ---- ministry ---- */
+async function renderMinistry(){const d=await api("/ministry-summary?year="+encodeURIComponent(YEAR));
+  $("#minTitle").textContent=(YEAR||"All Years")+" Targets vs Collections (by Ministry)";
+  $("#minTbl thead").innerHTML="<tr><th>Ministry</th><th class='num'>Target</th><th class='num'>Collected</th><th class='num'>Balance</th><th class='num'>%</th><th>Progress</th></tr>";
+  let tt=0,ta=0;$("#minTbl tbody").innerHTML=d.rows.map(r=>{tt+=r.target;ta+=r.actual;const cls=r.pct>=100?"ok":r.pct>=50?"mid":"low",col=r.pct>=100?"#22c55e":r.pct>=50?"#f59e0b":"#ef4444",w=Math.min(100,r.pct).toFixed(1);
+    return `<tr><td><b>${esc(r.ministry)}</b></td><td class="num">${peso(r.target)}</td><td class="num">${peso(r.actual)}</td><td class="num">${peso(r.balance)}</td><td class="num"><span class="pill ${cls}">${r.pct.toFixed(1)}%</span></td><td><div class="bar-track" style="min-width:120px"><div class="bar-fill" style="width:${w}%;background:${col}"></div></div></td></tr>`;}).join("")+
+    `<tr style="font-weight:700;background:var(--panel2)"><td>TOTAL</td><td class="num">${peso(tt)}</td><td class="num">${peso(ta)}</td><td class="num">${peso(tt-ta)}</td><td class="num">${tt?(ta/tt*100).toFixed(1):0}%</td><td></td></tr>`;}
+
+/* ---- report rendering (shared) ---- */
+function officialBanner(center,topRight){return `<div class="rpt-banner">${topRight?`<div class="rpt-cno">${topRight}</div>`:""}<img class="emblem" src="/static/logo_emblem.png"><img class="seal-l" src="/static/logo_ministry.png"><img class="seal-r" src="/static/logo_office.png"><div class="rpt-head">${center}</div></div>`;}
+function letterhead(){const s=META.settings||{};return officialBanner(`<div class="r1">${esc(s.letterhead_l1)}</div><div class="r2">${esc(s.letterhead_l2)}</div><div class="r3">${esc(s.letterhead_l3)}</div><div class="r3">${esc(s.letterhead_l4)}</div>`,"");}
+function sigsHTML(sigs){return `<div class="cert-sigs">`+(sigs||META.signatories||[]).map(s=>`<div class="cert-sig"><div class="role">${esc(s.role_label)}:</div><div class="nm">${esc(s.name)}</div><div class="ps">${esc(s.position)}</div></div>`).join("")+`</div>`;}
+function matrixHTML(gLabel,d){gLabel=(d&&d.rowLabel)||gLabel;let h=`<table><thead><tr><th class="lname">${esc(gLabel)}</th>`+d.cols.map(c=>`<th>${esc(c.label)}</th>`).join("")+`<th>TOTAL</th></tr></thead><tbody>`;
+  d.rows.forEach(r=>{h+=`<tr><td class="lname"><b>${esc(r.name)}</b> ${r.full&&r.full!==r.name?'<span style="color:#555">- '+esc(r.full)+'</span>':''}</td>`+d.cols.map(c=>`<td class="num">${fmtN(r.cells[c.key])}</td>`).join("")+`<td class="num"><b>${fmtN(r.total)}</b></td></tr>`;});
+  h+=`<tr class="tot"><td class="lname">GRAND TOTAL</td>`+d.cols.map(c=>`<td class="num">${fmtN(d.colTot[c.key])}</td>`).join("")+`<td class="num">${fmtN(d.grand)}</td></tr></tbody></table>`;return h;}
+function nestedHTML(d){let h=`<table><thead><tr><th class="lname">Ministry / Office</th>`+d.cols.map(c=>`<th>${esc(c.label)}</th>`).join("")+`<th>TOTAL</th></tr></thead><tbody>`;
+  d.ministries.forEach(m=>{h+=`<tr class="grp"><td class="lname"><b>${esc(m.name)}</b> ${m.full&&m.full!==m.name?'<span style="color:#555">- '+esc(m.full)+'</span>':''}</td>`+d.cols.map(c=>`<td class="num"><b>${fmtN(m.subtotal.cells[c.key])}</b></td>`).join("")+`<td class="num"><b>${fmtN(m.subtotal.total)}</b></td></tr>`;
+    m.offices.forEach(o=>{h+=`<tr><td class="lname subrow">${esc(o.name)}</td>`+d.cols.map(c=>`<td class="num">${fmtN(o.cells[c.key])}</td>`).join("")+`<td class="num">${fmtN(o.total)}</td></tr>`;});});
+  h+=`<tr class="tot"><td class="lname">GRAND TOTAL</td>`+d.cols.map(c=>`<td class="num">${fmtN(d.colTot[c.key])}</td>`).join("")+`<td class="num">${fmtN(d.grand)}</td></tr></tbody></table>`;return h;}
+function officialHTML(d){
+  function row(n,depth){const hasKids=n.children&&n.children.length>0;const bold=n.isTotal||!hasKids;
+    let cls=n.isTotal?"tot":(hasKids?"grp":"");
+    if(depth===0&&n.label.startsWith("III."))cls+=" sec-break";
+    let h=`<tr class="${cls}"><td class="lname" style="padding-left:${depth*16}px">${bold?"<b>":""}${esc(n.label)}${bold?"</b>":""}</td>`+
+      d.cols.map(c=>`<td class="num">${fmtN(n.cells[c.key])}</td>`).join("")+`<td class="num"><b>${fmtN(n.total)}</b></td></tr>`;
+    (n.children||[]).forEach(c=>h+=row(c,depth+1));
+    return h;}
+  let h=`<table><thead><tr><th class="lname">Particulars</th>`+d.cols.map(c=>`<th>${esc(c.label)}</th>`).join("")+`<th>TOTAL</th></tr></thead><tbody>`;
+  d.sections.forEach(s=>h+=row(s,0));
+  h+=`</tbody></table>`;return h;}
+function rptFooter(){return `<div class="rpt-foot" style="margin-top:22px;font-size:11px">Generated: ${new Date().toLocaleString("en-PH")} | by ${esc(ME.name)}</div>`+sigsHTML();}
+function asofFmt(v){return v?new Date(v).toLocaleDateString("en-PH",{year:"numeric",month:"long",day:"numeric"}):"";}
+
+async function renderReport(){const type=$("#rpt_type").value,ledger=type==="ledger",quarterly=type==="quarterly",official=type==="official",detail=$("#rpt_detail").value;
+  $("#rpt_grp_wrap").style.display=(ledger||quarterly||official||detail==="drill")?"none":"";$("#rpt_detail_wrap").style.display=(ledger||quarterly||official)?"none":"";$("#rpt_lmin").style.display=ledger?"":"none";$("#rpt_lmon").style.display=ledger?"":"none";
+  const yr=YEAR||"All Years";let html=letterhead();
+  if(quarterly){const d=await api(`/report/quarterly?year=${encodeURIComponent(YEAR)}`);html+=`<div class="rpt-title">Summary of Report of Collection</div><div class="rpt-sub">Per Collection Type, by Quarter &nbsp; FY ${esc(yr)} &nbsp; (Amounts in PHP)</div>`+matrixHTML("Collection Type",d);}
+  else if(official){const d=await api(`/report/official?year=${encodeURIComponent(YEAR)}`);html+=`<div class="rpt-title">Summary of Collection</div>`+officialHTML(d);}
+  else if(type==="summary"||type==="bytype"){
+    if(detail==="drill"){const d=await api(`/report/${type}?detail=drill&year=${encodeURIComponent(YEAR)}`);html+=`<div class="rpt-title">${type==="summary"?"Summary of Collection":"Collection Report"}</div><div class="rpt-sub">FY ${esc(yr)} &nbsp; (Amounts in PHP)</div>`+nestedHTML(d);}
+    else{const gb=$("#rpt_groupby").value;const d=await api(`/report/${type}?year=${encodeURIComponent(YEAR)}&groupby=${gb}`);html+=`<div class="rpt-title">${type==="summary"?"Summary of Collection":"Collection Report"}</div><div class="rpt-sub">FY ${esc(yr)} &nbsp; ${type==="bytype"?"As of "+esc(asofFmt($("#rpt_asof").value))+" &nbsp;":""}(Amounts in PHP)</div>`+matrixHTML(gb==="office"?"Office / Agency":"Ministry",d);}
+  }else{const f={ministry:$("#rpt_ministry").value,month:$("#rpt_month").value};const qs=Object.entries(f).filter(([k,v])=>v).map(([k,v])=>k+"="+encodeURIComponent(v)).join("&");
+    const d=await api(`/report/ledger?year=${encodeURIComponent(YEAR)}&`+qs);
+    html+=`<div class="rpt-title">Collection Ledger</div><div class="rpt-sub">FY ${esc(yr)} &nbsp; As of ${esc(asofFmt($("#rpt_asof").value))}</div>`;
+    html+=`<table><thead><tr><th>Date</th><th class="lname">Ministry</th><th class="lname">Office</th><th class="lname">Payment</th><th class="lname">Branch</th><th class="lname">Type</th><th>Amount</th></tr></thead><tbody>`;
+    d.rows.forEach(t=>{html+=`<tr><td>${esc(t.txn_date)}</td><td class="lname">${esc(t.ministry)}</td><td class="lname">${esc(t.office)}</td><td class="lname">${esc(t.payment_method)}</td><td class="lname">${esc(t.lbp_branch)}</td><td class="lname">${esc(t.type)}</td><td class="num">${fmtN(t.amount)}</td></tr>`;});
+    html+=`<tr class="tot"><td colspan="6">TOTAL (${d.count} entries)</td><td class="num">${fmtN(d.total)}</td></tr></tbody></table>`;}
+  $("#rpt_out").innerHTML=html+rptFooter();setPageOrientation("landscape");
+  $("#rpt_xlsx").style.display=official?"":"none";}
+$$("#rpt_type,#rpt_asof,#rpt_groupby,#rpt_detail,#rpt_ministry,#rpt_month").forEach(el=>el.onchange=renderReport);
+function setPageOrientation(o){let st=document.getElementById("pageStyle");if(!st){st=document.createElement("style");st.id="pageStyle";document.head.appendChild(st);}st.textContent="@page{size:A4 "+o+";margin:11mm}";}
+$("#rpt_print").onclick=()=>{setPageOrientation("landscape");window.print();};
+$("#rpt_xlsx").onclick=()=>{location.href="/api/report/official.xlsx?year="+encodeURIComponent(YEAR);};
+$("#rpt_issue").onclick=async()=>{const type=$("#rpt_type").value,detail=$("#rpt_detail").value;
+  const params={year:YEAR};
+  if(type==="summary"||type==="bytype"){params.groupby=$("#rpt_groupby").value;params.detail=detail;}
+  else if(type==="ledger"){params.ministry=$("#rpt_ministry").value;params.month=$("#rpt_month").value;}
+  try{await api("/issue","POST",{kind:type,params});toast("Report issued & logged");}catch(err){toast(err.error||"Issue failed",true);}};
+
+/* ---- certification ---- */
+function amountInWords(n){n=Number(n)||0;if(!isFinite(n))return "(invalid amount)";n=Math.round(n*100)/100;const p=Math.floor(n),c=Math.round((n-p)*100);
+  const o=["","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"],te=["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];
+  function t3(x){let s="";if(x>=100){s+=o[Math.floor(x/100)]+" hundred";x%=100;if(x)s+=" ";}if(x>=20){s+=te[Math.floor(x/10)];if(x%10)s+="-"+o[x%10];}else if(x>0)s+=o[x];return s;}
+  function w(x){if(x===0)return "zero";const sc=["","thousand","million","billion","trillion"];let pt=[],i=0;while(x>0){const ch=x%1000;if(ch)pt.unshift(t3(ch)+(sc[i]?" "+sc[i]:""));x=Math.floor(x/1000);i++;}return pt.join(" ");}
+  let s=w(p)+" peso"+(p===1?"":"s");if(c>0)s+=" and "+w(c)+" centavo"+(c===1?"":"s");return s.toUpperCase();}
+$("#c_ministry").onchange=async function(){const m=this.value;if(!m){fillSel($("#c_office"),[],{blank:true});return;}
+  const d=await api("/agencies?ministry="+encodeURIComponent(m));fillSel($("#c_office"),d.agencies,{blank:true});};
+$$("#c_office,#c_month,#c_asof").forEach(el=>el.onchange=renderCert);
+async function renderCert(){const office=$("#c_office").value;if(!office){$("#cert_out").innerHTML='<p style="color:#555;padding:16px">Select a ministry and agency to generate a certification.</p>';return;}
+  const month=$("#c_month").value;const d=await api(`/certification?office=${encodeURIComponent(office)}&month=${encodeURIComponent(month)}&year=${encodeURIComponent(YEAR)}`);
+  let certNo="(assigned on Issue)";if(month){try{const nn=await api(`/cert-next?year=${encodeURIComponent(YEAR)}&month=${encodeURIComponent(month)}`);if(nn.cert_no)certNo=nn.cert_no+" (next)";}catch(e){}}
+  $("#cert_out").innerHTML=certHTML(d,certNo,asofFmt($("#c_asof").value));setPageOrientation("portrait");}
+function certDocHTML(d,certNo,dateStr,body,purpose,sigs){const s=META.settings||{};const monIdx=MONTHS.indexOf(d.month);
+  const period=d.month?(d.month+" 1-"+new Date(Number(d.year),monIdx+1,0).getDate()+", "+d.year):("FY "+d.year);
+  let h=officialBanner(`<div class="r1">${esc(s.letterhead_l1)}</div><div class="r2">${esc(s.letterhead_l2)}</div><div class="r3">${esc(s.letterhead_l3)}</div><div class="r3">${esc(s.letterhead_l4)}</div>`,`Certification No. <b>${esc(certNo)}</b>`+(dateStr?`<br>Date: ${esc(dateStr)}`:""));
+  h+=`<div class="cert-head"><div class="nm">${esc(d.head.name)}</div><div>${esc(d.head.title)}</div><div class="ag">${esc(d.agency_name)}</div><div>Costa Verde Autonomous Region</div><div>Regional Government Center, Puerto Real</div></div>`;
+  h+=`<div class="rpt-title">CERTIFICATION</div><p style="font-size:12px;text-align:justify;margin:10px 30px">${esc(body)}</p>`;
+  h+=`<div style="font-size:12px;margin:6px 0"><b>Ministry/Office/Agency Information</b><br>Agency Name: ${esc(d.agency_name)}<br>Organizational Code: ${esc(d.org_code)}</div>`;
+  h+=`<div style="font-size:12px;margin:6px 0"><b>Deposited Collection Information</b><br>Period Coverage: ${esc(period)}</div>`;
+  h+=`<table><thead><tr><th rowspan="2">Date</th><th rowspan="2" class="lname">Bank Branch</th><th colspan="${d.classes.length}">Revenue Classification</th><th rowspan="2" class="lname">Remarks</th></tr><tr>`+d.classes.map(c=>`<th>${esc(c)}</th>`).join("")+`</tr></thead><tbody>`;
+  d.lines.forEach(l=>{h+=`<tr><td>${esc(l.date)}</td><td class="lname">${esc(l.branch)}</td>`+d.classes.map(c=>`<td class="num">${c===l.cls?fmtN(l.amount):""}</td>`).join("")+`<td class="lname">${esc(l.remarks)}</td></tr>`;});
+  h+=`<tr class="tot"><td colspan="2">Total:</td>`+d.classes.map(c=>`<td class="num">${fmtN(d.totals[c])}</td>`).join("")+`<td></td></tr></tbody></table>`;
+  h+=`<div style="font-size:12px;margin-top:10px"><b>SUMMARY:</b></div><table style="width:auto;margin-top:4px">`+d.classes.map(c=>`<tr><td class="lname">${esc(c)}</td><td class="num">${fmtN(d.totals[c])}</td></tr>`).join("")+`<tr class="tot"><td class="lname">TOTAL</td><td class="num">${fmtN(d.grand)}</td></tr></table>`;
+  h+=`<div style="font-size:12px;margin-top:10px"><b>AMOUNT IN WORDS:</b> ***${esc(amountInWords(d.grand))}***</div>`;
+  h+=`<div style="font-size:12px;margin-top:4px"><b>PURPOSE:</b> ${esc(purpose)}</div>`+sigsHTML(sigs);return h;}
+function certHTML(d,certNo,dateStr){const s=META.settings||{};return certDocHTML(d,certNo,dateStr,s.cert_body,s.cert_purpose,null);}
+$("#c_print").onclick=()=>{setPageOrientation("portrait");window.print();};
+$("#c_issue").onclick=async()=>{const office=$("#c_office").value;if(!office)return toast("Select an agency",true);
+  try{const r=await api("/issue","POST",{kind:"cert",params:{office,month:$("#c_month").value,year:YEAR}});toast("Certification "+(r.cert_no||"")+" issued");renderCert();}catch(err){toast(err.error||"Issue failed",true);}};
+
+/* ---- report requests (#8) ---- */
+function rqToggle(){const k=$("#rq_kind").value;$("#rq_min_wrap").style.display=(k==="cert"||k==="ledger")?"":"none";$("#rq_off_wrap").style.display=(k==="cert")?"":"none";$("#rq_mon_wrap").style.display=(k==="cert"||k==="ledger")?"":"none";}
+$("#rq_kind").onchange=rqToggle;
+$("#rq_ministry").onchange=async function(){const m=this.value;if(!m){fillSel($("#rq_office"),[],{blank:true});return;}const d=await api("/agencies?ministry="+encodeURIComponent(m));fillSel($("#rq_office"),d.agencies,{blank:true});};
+$("#rq_submit").onclick=async()=>{const k=$("#rq_kind").value,params={year:$("#rq_year").value};
+  if(k==="cert"){params.office=$("#rq_office").value;params.month=$("#rq_month").value;}else if(k==="ledger"){params.ministry=$("#rq_ministry").value;params.month=$("#rq_month").value;}
+  try{await api("/requests","POST",{kind:k,params,note:$("#rq_note").value});toast("Request submitted");$("#rq_note").value="";renderRequests();}catch(err){toast(err.error||"Failed",true);}};
+function reqRef(r){if(r.kind==="cert")return "Certification — "+(r.params.office||"")+" "+(r.params.month||"")+" "+(r.params.year||"");return ({summary:"Summary",bytype:"By Type",quarterly:"Quarterly",official:"Collection Report",ledger:"Ledger"}[r.kind]||r.kind)+" — FY "+(r.params.year||"All");}
+function statusPill(r){const c=r.status==="fulfilled"?"ok":r.status==="declined"?"low":"mid";return `<span class="pill ${c}">${r.status}</span>`+(r.status==="declined"&&r.decline_reason?` <span class="hint">${esc(r.decline_reason)}</span>`:"");}
+async function renderRequests(){const d=await api("/requests");
+  const mine=d.rows.filter(r=>r.requester===d.me);
+  $("#myReqTbl thead").innerHTML="<tr><th>Requested</th><th>Report</th><th>Status</th><th></th></tr>";
+  $("#myReqTbl tbody").innerHTML=mine.map(r=>`<tr><td>${esc(r.created_ts)}</td><td>${esc(reqRef(r))}</td><td>${statusPill(r)}</td><td>${r.status==="fulfilled"?`<button class="btn sm" data-open="${r.id}">Open report</button>`:""}</td></tr>`).join("")||'<tr><td colspan="4" class="muted">You have no requests yet.</td></tr>';
+  $("#queueCard").style.display=d.canFulfill?"":"none";
+  if(d.canFulfill){const pend=d.rows.filter(r=>r.status==="pending");
+    $("#queueTbl thead").innerHTML="<tr><th>Requested</th><th>By</th><th>Report</th><th>Note</th><th></th></tr>";
+    $("#queueTbl tbody").innerHTML=pend.map(r=>`<tr><td>${esc(r.created_ts)}</td><td>${esc(r.requester_name||r.requester)}</td><td>${esc(reqRef(r))}</td><td>${esc(r.note)}</td><td><button class="btn sm green" data-fulfill="${r.id}">Fulfill</button> <button class="btn sm red" data-decline="${r.id}">Decline</button></td></tr>`).join("")||'<tr><td colspan="5" class="muted">No pending requests.</td></tr>';}
+  $("#req_out").style.display="none";}
+$("#tab-requests").addEventListener("click",async e=>{
+  const o=e.target.closest("[data-open]"),f=e.target.closest("[data-fulfill]"),dc=e.target.closest("[data-decline]");
+  if(o){const r=await api("/requests/"+o.dataset.open);if(r.issued){setPageOrientation(r.issued.kind==="cert"?"portrait":"landscape");$("#req_out").style.display="block";$("#req_out").innerHTML=issuedHTML(r.issued);$("#req_out").scrollIntoView();}}
+  else if(f){try{await api("/requests/"+f.dataset.fulfill+"/fulfill","POST",{});toast("Fulfilled & issued");renderRequests();}catch(err){toast(err.error||"Failed",true);}}
+  else if(dc){const reason=prompt("Reason for declining?");if(reason!=null){try{await api("/requests/"+dc.dataset.decline+"/decline","POST",{reason});toast("Declined");renderRequests();}catch(err){toast(err.error,true);}}}});
+function issuedHTML(s){let html;
+  if(s.kind==="cert"){const p=s.payload,d={office:p.office,month:p.month,year:p.year,classes:p.classes,lines:p.lines.map(a=>({date:a[0],branch:a[1],cls:a[2],amount:a[3],remarks:a[4]})),totals:p.totals,grand:p.grand,org_code:p.org_code,agency_name:p.agency_name,head:p.head};html=certHTMLfromSnap(d,s.cert_no,"",p);}
+  else if(s.kind==="official"){html=letterhead()+officialHTML(s.payload)+sigsHTML();}
+  else{html=letterhead()+(s.payload&&s.payload.ministries?nestedHTML(s.payload):s.payload?matrixHTML("Ministry",s.payload):`<p style="padding:10px">Ledger — total ${peso(s.total)} (${s.row_count} entries)</p>`)+sigsHTML();}
+  return `<div class="no-print" style="background:#fff7e0;border:1px solid #d8b74a;color:#5a4a12;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:12px"><b>AS ISSUED</b> — ${esc(s.cert_no||("FY "+((s.params&&s.params.year)||"")))} · ${esc(s.generated_ts)} by ${esc(s.by_user)} <button class="btn sm gray" onclick="setPageOrientation('${s.kind==='cert'?'portrait':'landscape'}');window.print()" style="margin-left:8px">Print</button></div>`+html;}
+
+/* ---- history ---- */
+async function renderHistory(){const d=await api("/issued");$("#hist_out").style.display="none";
+  $("#histTbl thead").innerHTML="<tr><th>Issued</th><th>Type</th><th>Reference</th><th>By</th><th class='num'>Total</th><th></th></tr>";
+  $("#histTbl tbody").innerHTML=d.rows.map(s=>{const kind=s.kind==="cert"?"Certification":s.kind==="summary"?"Summary":s.kind==="bytype"?"By Type":s.kind==="quarterly"?"Quarterly":s.kind==="official"?"Collection Report":"Ledger";
+    return `<tr><td>${esc(s.generated_ts)}</td><td>${esc(kind)}</td><td>${esc(s.cert_no||("FY "+(YEAR||"All")))}</td><td>${esc(s.by_user)}</td><td class="num">${peso(s.total)}</td><td><button class="btn sm" data-id="${esc(s.id)}">Open</button></td></tr>`;}).join("")||'<tr><td colspan="6" class="muted">No issued reports yet.</td></tr>';}
+$("#histTbl").addEventListener("click",async e=>{const b=e.target.closest("button[data-id]");if(!b)return;const s=await api("/issued/"+b.dataset.id);
+  let html;if(s.kind==="cert"){const p=s.payload;const d={office:p.office,month:p.month,year:p.year,classes:p.classes,lines:p.lines.map(a=>({date:a[0],branch:a[1],cls:a[2],amount:a[3],remarks:a[4]})),totals:p.totals,grand:p.grand,org_code:p.org_code,agency_name:p.agency_name,head:p.head};
+    html=`<div class="no-print" style="background:#fff7e0;border:1px solid #d8b74a;color:#5a4a12;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:12px"><b>AS ISSUED</b> — ${esc(s.cert_no)}, ${esc(s.generated_ts)} by ${esc(s.by_user)}</div>`+certHTMLfromSnap(d,s.cert_no,"",p);}
+  else if(s.kind==="official"){html=`<div class="no-print" style="background:#fff7e0;border:1px solid #d8b74a;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:12px;color:#5a4a12"><b>AS ISSUED</b> — ${esc(s.generated_ts)} by ${esc(s.by_user)} | Total ${peso(s.total)}</div>`+letterhead()+officialHTML(s.payload)+sigsHTML();}
+  else{html=`<div class="no-print" style="background:#fff7e0;border:1px solid #d8b74a;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:12px;color:#5a4a12"><b>AS ISSUED</b> — ${esc(s.generated_ts)} by ${esc(s.by_user)} | Total ${peso(s.total)}</div>`+letterhead()+(s.payload&&s.payload.ministries?nestedHTML(s.payload):s.payload?matrixHTML("Ministry",s.payload):`<p>Ledger — total ${peso(s.total)} (${s.row_count} entries)</p>`)+sigsHTML();}
+  setPageOrientation(s.kind==="cert"?"portrait":"landscape");$("#hist_out").style.display="block";$("#hist_out").innerHTML=html;$("#hist_out").scrollIntoView();});
+function certHTMLfromSnap(d,certNo,dateStr,p){const s=META.settings||{};return certDocHTML(d,certNo,dateStr,p.body||s.cert_body,p.purpose||s.cert_purpose,p.sigs);}
+
+/* ---- audit ---- */
+async function renderAudit(){const d=await api("/audit?limit=500");$("#auditTbl thead").innerHTML="<tr><th>Timestamp</th><th>Action</th><th>Detail</th><th>By</th></tr>";
+  $("#auditTbl tbody").innerHTML=d.rows.map(a=>`<tr><td>${esc(a.ts)}</td><td>${esc(a.action)}</td><td>${esc(a.detail)}</td><td>${esc(a.by_user)}</td></tr>`).join("")||'<tr><td colspan="4" class="muted">No changes logged.</td></tr>';}
+
+/* ---- admin ---- */
+async function renderAdmin(){if(role()!=="admin")return;const d=await api("/users");
+  $("#usersTbl thead").innerHTML="<tr><th>Username</th><th>Name</th><th>Role</th><th>Active</th><th></th></tr>";
+  $("#usersTbl tbody").innerHTML=d.rows.map(u=>`<tr><td>${esc(u.username)}</td><td>${esc(u.name)}</td><td>${esc(u.role)}</td><td>${u.active?"yes":"no"}</td><td><button class="btn sm gray" data-uid="${u.id}" data-act="${u.active?0:1}">${u.active?"Disable":"Enable"}</button> <button class="btn sm gray" data-pwuid="${u.id}">Reset password</button></td></tr>`).join("");renderCertSettings();}
+$("#u_create").onclick=async()=>{try{await api("/users","POST",{username:$("#u_username").value,name:$("#u_name").value,password:$("#u_pass").value,role:$("#u_role").value});toast("User created");["#u_username","#u_name","#u_pass"].forEach(i=>$(i).value="");renderAdmin();}catch(err){toast(err.error||"Failed",true);}};
+$("#usersTbl").addEventListener("click",async e=>{const b=e.target.closest("button[data-uid]"),pw=e.target.closest("button[data-pwuid]");
+  if(pw){const p=prompt("New password for this user (min 8 characters):");if(p==null)return;if(p.length<8)return toast("Password must be at least 8 characters",true);try{await api(`/users/${pw.dataset.pwuid}/password`,"POST",{password:p});toast("Password reset");}catch(err){toast(err.error||"Failed",true);}return;}
+  if(b){await api(`/users/${b.dataset.uid}/active`,"POST",{active:b.dataset.act==="1"});renderAdmin();}});
+$("#t_save").onclick=async()=>{try{await api("/target","POST",{ministry:$("#t_min").value,year:$("#t_year").value,target:$("#t_val").value});toast("Target saved");$("#t_val").value="";}catch(err){toast(err.error||"Failed",true);}};
+
+/* ---- admin: officials & certification settings ---- */
+$("#setSub").addEventListener("click",e=>{const b=e.target.closest("button[data-set]");if(!b)return;
+  $$("#setSub button").forEach(x=>x.classList.toggle("active",x===b));
+  $$("#tab-admin .setpanel").forEach(p=>p.style.display=(p.id==="set-"+b.dataset.set)?"":"none");});
+function renderCertSettings(){renderSigs();renderHeads();renderCmap();renderGroups();renderLH();renderOrg();}
+function headsMsg(){const miss=HEADS.filter(h=>!h.has_head).length;
+  $("#heads_missing").innerHTML=miss?`<b>${miss}</b> of ${HEADS.length} agencies have no head assigned yet — their certifications print a blank name until you fill one in.`:`All ${HEADS.length} agencies have a head assigned.`;}
+
+/* signatories (ordered block; replace-all on save) */
+function sigRowHTML(s){s=s||{};return `<div class="row sigrow" style="margin-bottom:8px">`+
+  `<input class="s_role" placeholder="Role (e.g. Prepared by)" value="${esc(s.role_label||'')}" style="max-width:210px">`+
+  `<input class="s_name" placeholder="Name" value="${esc(s.name||'')}" style="max-width:260px">`+
+  `<input class="s_pos" placeholder="Position / title" value="${esc(s.position||'')}" style="max-width:280px">`+
+  `<button class="btn red sm s_del" type="button">Remove</button></div>`;}
+function renderSigs(){const s=(META.signatories&&META.signatories.length)?META.signatories:[{}];$("#sigRows").innerHTML=s.map(sigRowHTML).join("");}
+$("#sig_add").onclick=()=>$("#sigRows").insertAdjacentHTML("beforeend",sigRowHTML());
+$("#sigRows").addEventListener("click",e=>{if(e.target.closest(".s_del"))e.target.closest(".sigrow").remove();});
+$("#sig_save").onclick=async()=>{const sigs=$$("#sigRows .sigrow").map(r=>({role_label:r.querySelector(".s_role").value,name:r.querySelector(".s_name").value,position:r.querySelector(".s_pos").value}));
+  try{await api("/signatories","POST",{signatories:sigs});toast("Signatories saved");META=await api("/meta");renderSigs();}catch(err){toast(err.error||"Failed",true);}};
+
+/* agency heads (per-row upsert; lists every certifiable office) */
+let HEADS=[];
+async function renderHeads(){try{HEADS=(await api("/cert-offices")).rows;}catch(e){HEADS=[];}headsMsg();drawHeads();}
+function drawHeads(){const f=($("#heads_filter").value||"").toLowerCase(),blank=$("#heads_onlyblank").checked;
+  const rows=HEADS.filter(h=>(!blank||!h.has_head)&&(!f||(h.office+" "+h.name+" "+h.agency_name).toLowerCase().includes(f)));
+  $("#headsTbl thead").innerHTML="<tr><th>Office</th><th>Head Name</th><th>Title</th><th>Agency Name (as printed)</th><th></th></tr>";
+  $("#headsTbl tbody").innerHTML=rows.map(h=>`<tr data-off="${esc(h.office)}"${h.has_head?"":' style="background:rgba(245,158,11,.10)"'}>`+
+    `<td><b>${esc(h.office)}</b></td>`+
+    `<td><input class="h_name" value="${esc(h.name)}" placeholder="(none)" style="min-width:190px;margin:0"></td>`+
+    `<td><input class="h_title" value="${esc(h.title)}" placeholder="e.g. Minister" style="min-width:130px;margin:0"></td>`+
+    `<td><input class="h_agency" value="${esc(h.agency_name)}" placeholder="Full agency name" style="min-width:250px;margin:0"></td>`+
+    `<td><button class="btn green sm h_save" type="button">Save</button></td></tr>`).join("")||'<tr><td colspan="5" class="muted">No agencies match.</td></tr>';}
+$("#heads_filter").oninput=drawHeads;$("#heads_onlyblank").onchange=drawHeads;
+$("#headsTbl").addEventListener("click",async e=>{const b=e.target.closest(".h_save");if(!b)return;const tr=b.closest("tr"),office=tr.dataset.off;
+  const rec={office,name:tr.querySelector(".h_name").value,title:tr.querySelector(".h_title").value,agency_name:tr.querySelector(".h_agency").value};
+  try{await api("/agency-head","POST",rec);toast("Saved "+office);const h=HEADS.find(x=>x.office===office);
+    if(h){h.name=rec.name;h.title=rec.title;h.agency_name=rec.agency_name;h.has_head=!!rec.name.trim();}
+    headsMsg();tr.style.background=rec.name.trim()?"":"rgba(245,158,11,.10)";}catch(err){toast(err.error||"Failed",true);}});
+
+/* revenue-class mapping (per-type; saves on change) */
+function renderCmap(){const classes=((META.rev_schemes||{}).standard||{}).classes||[];
+  $("#ct_class").innerHTML=classes.map(c=>`<option>${esc(c)}</option>`).join("");
+  $("#cmapTbl thead").innerHTML="<tr><th>Collection Type</th><th>Certification Revenue-Class</th></tr>";
+  $("#cmapTbl tbody").innerHTML=(META.collection_types||[]).map(t=>{const list=classes.includes(t.cert_class)?classes:classes.concat([t.cert_class]);
+    const opts=list.map(c=>`<option${c===t.cert_class?" selected":""}>${esc(c)}</option>`).join("");
+    return `<tr><td><b>${esc(t.name)}</b></td><td><select class="cm_sel" data-name="${esc(t.name)}" style="min-width:230px;margin:0">${opts}</select></td></tr>`;}).join("");}
+$("#cmapTbl").addEventListener("change",async e=>{const s=e.target.closest(".cm_sel");if(!s)return;
+  try{await api("/cert-class","POST",{name:s.dataset.name,cert_class:s.value});toast("Mapping saved");
+    const t=(META.collection_types||[]).find(x=>x.name===s.dataset.name);if(t)t.cert_class=s.value;}catch(err){toast(err.error||"Failed",true);renderCmap();}});
+
+/* certification groups (merge several sub-offices into one certification) */
+let GROUPS=[],G_OFFICES=[],G_SEL=new Set(),G_EDIT=null;
+async function renderGroups(){try{GROUPS=(await api("/cert-groups")).rows;G_OFFICES=(await api("/cert-offices")).rows.map(r=>r.office);}catch(e){GROUPS=[];G_OFFICES=[];}
+  fillSel($("#g_ministry"),META.ministries||[],{blank:true,keep:true});drawGroups();drawMembers();grpHeadOpts();}
+function drawGroups(){$("#grpTbl thead").innerHTML="<tr><th>Group</th><th>Ministry</th><th>Org Code</th><th>Head from</th><th>Member offices</th><th></th></tr>";
+  $("#grpTbl tbody").innerHTML=GROUPS.map(g=>`<tr><td><b>${esc(g.name)}</b></td><td>${esc(g.ministry)}</td><td>${g.org_code?esc(g.org_code):'<span class="muted">auto</span>'}</td><td>${esc(g.head_office)}</td><td>${g.members.map(esc).join(", ")}</td>`+
+    `<td><button class="btn sm g_edit" data-name="${esc(g.name)}" type="button">Edit</button> <button class="btn sm red g_del" data-name="${esc(g.name)}" type="button">Delete</button></td></tr>`).join("")||'<tr><td colspan="6" class="muted">No groups yet — every certification stays per single agency until you add one.</td></tr>';}
+function drawMembers(){const f=($("#g_filter").value||"").toLowerCase();
+  // include selected members that no longer exist as offices, so a stale group stays editable
+  const all=[...new Set([...G_OFFICES,...G_SEL])].sort();
+  $("#g_members").innerHTML=all.filter(o=>!f||o.toLowerCase().includes(f)).map(o=>{const stale=!G_OFFICES.includes(o);
+    return `<label style="display:flex;gap:6px;align-items:center;font-weight:400;margin:2px 0"><input type="checkbox" data-off="${esc(o)}"${G_SEL.has(o)?" checked":""} style="width:auto;margin:0">${esc(o)}${stale?' <span class="muted">(no longer an office — untick)</span>':""}</label>`;}).join("")||'<span class="muted">No offices match.</span>';}
+function grpHeadOpts(){const cur=$("#g_head").value;fillSel($("#g_head"),[...G_SEL],{blank:true});if(G_SEL.has(cur))$("#g_head").value=cur;}
+$("#g_filter").oninput=drawMembers;
+$("#g_members").addEventListener("change",e=>{const c=e.target.closest("input[type=checkbox]");if(!c)return;
+  c.checked?G_SEL.add(c.dataset.off):G_SEL.delete(c.dataset.off);grpHeadOpts();});
+function grpReset(){G_EDIT=null;G_SEL=new Set();$("#g_name").value="";$("#g_org").value="";$("#g_filter").value="";$("#g_ministry").value="";$("#grp_form_title").textContent="Add a group";drawMembers();grpHeadOpts();}
+$("#g_new").onclick=grpReset;
+$("#g_save").onclick=async()=>{try{
+  await api("/cert-group","POST",{name:$("#g_name").value,ministry:$("#g_ministry").value,org_code:$("#g_org").value,head_office:$("#g_head").value,members:[...G_SEL],original:G_EDIT});
+  toast("Group saved");grpReset();META=await api("/meta");renderGroups();}catch(err){toast(err.error||"Failed",true);}};
+$("#grpTbl").addEventListener("click",async e=>{
+  const ed=e.target.closest(".g_edit"),dl=e.target.closest(".g_del");
+  if(ed){const g=GROUPS.find(x=>x.name===ed.dataset.name);if(!g)return;G_EDIT=g.name;
+    $("#g_name").value=g.name;$("#g_ministry").value=g.ministry;
+    if(g.ministry&&$("#g_ministry").value!==g.ministry){$("#g_ministry").insertAdjacentHTML("beforeend",`<option>${esc(g.ministry)}</option>`);$("#g_ministry").value=g.ministry;}
+    $("#g_org").value=g.org_code;$("#g_filter").value="";
+    G_SEL=new Set(g.members);drawMembers();grpHeadOpts();$("#g_head").value=g.head_office;
+    $("#grp_form_title").textContent="Edit group — "+g.name;}
+  else if(dl){if(!confirm('Delete group "'+dl.dataset.name+'"? Certifications go back to per-office; documents already issued are not affected.'))return;
+    try{await api("/cert-group-delete","POST",{name:dl.dataset.name});toast("Group deleted");grpReset();META=await api("/meta");renderGroups();}catch(err){toast(err.error||"Failed",true);}}});
+
+/* add a new collection type */
+function fillTypeSelects(){fillSel($("#f_type"),(META.collection_types||[]).map(t=>t.name),{blank:true});fillSel($("#flt_type"),(META.collection_types||[]).map(t=>t.name),{all:true});}
+$("#ct_add").onclick=async()=>{const name=$("#ct_name").value.trim();if(!name)return toast("Enter a type name",true);
+  try{await api("/collection-type","POST",{name,cert_class:$("#ct_class").value});toast("Collection type added");$("#ct_name").value="";META=await api("/meta");renderCmap();fillTypeSelects();}catch(err){toast(err.error||"Failed",true);}};
+
+/* org-codes editor (Admin) */
+let ORGROWS=[];
+$("#org_add").onclick=async()=>{
+  const org_code=$("#org_new_code").value.trim(),office=$("#org_new_office").value.trim(),
+        ministry=$("#org_new_ministry").value.trim(),clearing=$("#org_new_clearing").value.trim();
+  if(!org_code)return toast("Enter an org code",true);
+  if(!office)return toast("Enter an office name",true);
+  try{await api("/orgcode-new","POST",{org_code,office,ministry,clearing});
+    toast("Added "+org_code);
+    $("#org_new_code").value="";$("#org_new_office").value="";$("#org_new_ministry").value="";$("#org_new_clearing").value="";
+    META=await api("/meta");(META.orgmap||[]).forEach(x=>ORG[x.org_code]=x);
+    await renderOrg();
+  }catch(err){toast(err.error||"Failed",true);}};
+async function renderOrg(){try{ORGROWS=(await api("/orgcodes")).rows;}catch(e){ORGROWS=[];}
+  $("#ministryList").innerHTML=(META.ministries||[]).map(m=>`<option value="${esc(m)}">`).join("");orgMsg();drawOrg();}
+function orgNeedsReview(o){return !o.ministry.trim()||(o.suggested_ministry&&o.suggested_ministry!==o.ministry);}
+function orgMsg(){const blank=ORGROWS.filter(o=>!o.ministry.trim()).length;
+  const mis=ORGROWS.filter(o=>o.ministry.trim()&&o.suggested_ministry&&o.suggested_ministry!==o.ministry).length;
+  const parts=[];if(blank)parts.push(`<b>${blank}</b> with no ministry`);if(mis)parts.push(`<b>${mis}</b> whose ministry differs from what their entries actually use`);
+  $("#org_missing").innerHTML=parts.length?`${parts.join(" and ")} — highlighted below. Click a blue suggestion to fill it, then Save (this re-groups that office's existing entries too).`:`All ${ORGROWS.length} org codes have a ministry consistent with their entries.`;}
+function drawOrg(){const f=($("#org_filter").value||"").toLowerCase(),only=$("#org_onlyblank").checked;
+  const rows=ORGROWS.filter(o=>(!only||orgNeedsReview(o))&&(!f||(o.org_code+" "+o.office+" "+o.ministry).toLowerCase().includes(f)));
+  $("#orgTbl thead").innerHTML="<tr><th>Org Code</th><th>Office</th><th>Ministry</th><th>Suggested (from entries)</th><th class='num'>Entries</th><th></th></tr>";
+  $("#orgTbl tbody").innerHTML=rows.map(o=>{const rev=orgNeedsReview(o),sug=o.suggested_ministry;
+    const sugCell=(sug&&sug!==o.ministry)?`<span class="o_sug" style="cursor:pointer;text-decoration:underline;color:var(--accent);font-weight:600">${esc(sug)}</span>`:(sug?esc(sug):'<span class="muted">—</span>');
+    return `<tr data-code="${esc(o.org_code)}"${rev?' style="background:rgba(245,158,11,.10)"':''}><td><b>${esc(o.org_code)}</b></td><td>${esc(o.office)}</td>`+
+    `<td><input class="o_min" list="ministryList" value="${esc(o.ministry)}" placeholder="(none)" style="min-width:150px;margin:0"></td>`+
+    `<td>${sugCell}</td><td class="num">${o.txns}</td><td><button class="btn green sm o_save" type="button">Save</button></td></tr>`;}).join("")||'<tr><td colspan="6" class="muted">No codes match.</td></tr>';}
+$("#org_filter").oninput=drawOrg;$("#org_onlyblank").onchange=drawOrg;
+$("#orgTbl").addEventListener("click",async e=>{
+  const sug=e.target.closest(".o_sug");if(sug){sug.closest("tr").querySelector(".o_min").value=sug.textContent;return;}
+  const b=e.target.closest(".o_save");if(!b)return;const tr=b.closest("tr"),code=tr.dataset.code,min=tr.querySelector(".o_min").value.trim();
+  try{const res=await api("/orgcode","POST",{org_code:code,ministry:min});toast("Saved "+code+(res.regrouped?` (${res.regrouped} entries regrouped)`:""));
+    const o=ORGROWS.find(x=>x.org_code===code);if(o)o.ministry=min;orgMsg();if(o)tr.style.background=orgNeedsReview(o)?"rgba(245,158,11,.10)":"";
+    META=await api("/meta");(META.orgmap||[]).forEach(x=>ORG[x.org_code]=x);$("#ministryList").innerHTML=(META.ministries||[]).map(m=>`<option value="${esc(m)}">`).join("");
+  }catch(err){toast(err.error||"Failed",true);}});
+
+/* letterhead & certificate text */
+function renderLH(){const s=META.settings||{};$("#lh_l1").value=s.letterhead_l1||"";$("#lh_l2").value=s.letterhead_l2||"";$("#lh_l3").value=s.letterhead_l3||"";$("#lh_l4").value=s.letterhead_l4||"";$("#lh_body").value=s.cert_body||"";$("#lh_purpose").value=s.cert_purpose||"";}
+$("#lh_save").onclick=async()=>{const rec={l1:$("#lh_l1").value,l2:$("#lh_l2").value,l3:$("#lh_l3").value,l4:$("#lh_l4").value,body:$("#lh_body").value,purpose:$("#lh_purpose").value};
+  try{await api("/letterhead","POST",rec);toast("Letterhead saved");META=await api("/meta");renderLH();}catch(err){toast(err.error||"Failed",true);}};
+
+boot();
+</script>
+</body>
+</html>
