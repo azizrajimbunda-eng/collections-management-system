@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+server/collection.db
+server/collection.db-*
+server/.secret_key
+server/backups/
+*.xlsx
+user.txt
